@@ -9,7 +9,7 @@
  */
 
 // 今日重点
-const todayFocus = [
+const todayFocusDefaults = [
   { id: 1, text: '螺纹RB2610行情跟踪', priority: 'high' },
   { id: 2, text: '焦煤JM行情观察', priority: 'high' },
   { id: 3, text: 'AI算力项目推进', priority: 'medium' },
@@ -17,49 +17,37 @@ const todayFocus = [
 ];
 
 // 持仓观察（模拟）
-const positions = [
+const positionsDefaults = [
   {
     id: 'pos-rb',
     name: '螺纹钢',
     code: 'RB2610',
     direction: '多',
-    cost: 3012,
+    quantity: 6,
+    multiplier: 10,
+    cost: 2997.5,
     target: 3120,
     stopLoss: 2960,
-    note: '趋势偏强，注意夜盘波动'
+    plan: '目标 3120，止损 2960',
+    note: '多头持仓，关注夜盘波动'
   },
   {
-    id: 'pos-jm',
+    id: 'pos-jm2610',
     name: '焦煤',
-    code: 'JM2609',
+    code: 'JM2610',
     direction: '空',
+    quantity: 2,
+    multiplier: 60,
     cost: 1205,
     target: 1150,
     stopLoss: 1230,
-    note: '供应压力仍在，逢高做空'
-  }
-];
-
-// 企业项目
-const projects = [
-  {
-    id: 'proj-ai',
-    name: 'AI算力项目',
-    status: '调研阶段',
-    statusClass: 'status-research',
-    progress: 25
-  },
-  {
-    id: 'proj-ti',
-    name: '钛粉项目',
-    status: '资料整理阶段',
-    statusClass: 'status-organize',
-    progress: 40
+    plan: '目标 1150，止损 1230',
+    note: '空头示例持仓，关注供应压力'
   }
 ];
 
 // 文件入口
-const fileEntries = [
+const fileEntriesDefaults = [
   { id: 'finance', name: '财务资料', icon: '📁', path: '#' },
   { id: 'contract', name: '合同资料', icon: '📁', path: '#' },
   { id: 'project', name: '项目资料', icon: '📁', path: '#' },
@@ -67,7 +55,7 @@ const fileEntries = [
 ];
 
 // 快捷控制按钮
-const quickActions = [
+const quickActionsDefaults = [
   { id: 'tesla', name: 'Tesla控制', icon: '🚗', action: 'tesla' },
   { id: 'image', name: '图片管理', icon: '📷', action: 'image' },
   { id: 'file', name: '文件管理', icon: '📁', action: 'file' },
@@ -76,8 +64,14 @@ const quickActions = [
   { id: 'setting', name: '设置', icon: '⚙️', action: 'setting' }
 ];
 
+const todayFocus = window.BossData.register('todayFocus', todayFocusDefaults);
+const positions = window.BossData.register('positions', positionsDefaults);
+const fileEntries = window.BossData.register('fileEntries', fileEntriesDefaults);
+const quickActions = window.BossData.register('quickActions', quickActionsDefaults);
+
 window.todayFocus = todayFocus;
 window.positions = positions;
-window.projects = projects;
+// 项目数据已迁移至 projectData.js；此处保留其他首页模块的默认数据。
+window.projects = window.projectData || [];
 window.fileEntries = fileEntries;
 window.quickActions = quickActions;

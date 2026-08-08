@@ -9,8 +9,11 @@ boss-cockpit/
 ├── index.html      # 主页面
 ├── style.css       # 样式（深色高级风格）
 ├── script.js       # 主逻辑与交互
-├── data.js         # 业务模拟数据（今日重点、持仓、项目、文件）
-├── futureData.js   # 期货行情模拟数据 + 接口预留
+├── dataStore.js    # 统一数据层、localStorage、AI JSON 导入
+├── data.js         # 今日重点、持仓、文件、快捷入口数据
+├── futuresData.js  # 独立期货数据模块 + getFutureQuotes()
+├── vehicleData.js  # 独立车辆与快捷指令配置
+├── projectData.js  # 独立企业项目数据
 ├── README.md       # 项目说明
 ├── manifest.json    # PWA 安装配置
 └── icons/           # iPhone / PWA App 图标（180/192/512/1024）
@@ -33,6 +36,10 @@ boss-cockpit/
 当前已配置快捷指令：Model 3 使用 `3_OpenTrunk`、`3_ClimateOn`；Model X 使用 `X_OpenTrunk`、`X_OpenRightRear`、`X_OpenLeftRear`、`X_OpenDriverDoor`、`X_CloseRearDoors`、`X_ClimateOn`。
 
 行情入口使用快捷指令 `OpenWenhua`，通过 `shortcuts://run-shortcut?name=OpenWenhua` 打开文华财经随身行；行情页面不在 Boss Cockpit 内部展开。
+
+第七阶段完成数据驱动架构：页面通过 `futuresData.js`、`vehicleData.js`、`projectData.js` 读取数据；`dataStore.js` 使用 `localStorage` 保存更新后的模块。可在控制台调用 `importBossData(json)` 导入 AI 生成的 JSON，导入后页面自动刷新。
+
+当前版本在“我的”页面增加了“数据管理”入口，可直接粘贴 JSON 导入；导入结果会保存到本机，并立即刷新首页及项目页面。
 
 ## 本地预览（Mac）
 
@@ -96,9 +103,9 @@ vercel
 
 | 功能           | 位置说明 |
 |----------------|----------|
-| Tesla 控制     | `pages.js` → `teslaVehicles.*.shortcuts` 配置快捷指令名称，通过 `shortcuts://run-shortcut` 调用 |
-| 期货真实行情   | `futureData.js` → `getFutureQuotes()` 替换为真实 fetch |
-| 数据库/持久化  | `data.js` 中数据可改为 localStorage / IndexedDB / 后端 |
+| Tesla 控制     | `vehicleData.js` → `controls[].shortcut` 配置快捷指令名称，通过 `shortcuts://run-shortcut` 调用 |
+| 期货真实行情   | `futuresData.js` → `getFutureQuotes()` 替换为真实 fetch |
+| 数据库/持久化  | `dataStore.js` → 替换存储实现，或接入 IndexedDB / 后端 |
 | AI 助手        | 快捷按钮 + 独立页面，可接入 Grok API 等 |
 | 多页面切换     | 底部导航已预留，可扩展不同 section 显示/隐藏 |
 
@@ -108,3 +115,16 @@ vercel
 - 大触控区域，适合单手操作
 - 流畅点击反馈 + 轻微震动（支持设备）
 - 完全适配 iPhone 安全区域（刘海/底部横条）
+
+## 数据层测试
+
+在本地服务器打开页面后，可在浏览器控制台执行：
+
+```js
+importBossData({
+  futuresData: [{ id: 'rb2610', name: '螺纹钢', code: 'RB2610', price: 3050, change: 13, changePercent: 0.43, unit: '元/吨' }],
+  projectData: [{ id: 'proj-ai', name: 'AI算力项目', status: '合作沟通', progress: 50, nextStep: '确认方案' }]
+})
+```
+
+页面会自动刷新对应模块；执行 `location.reload()` 后导入值仍会保留。清理测试数据可执行 `BossData.clearLocalData()`。

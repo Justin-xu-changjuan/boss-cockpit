@@ -65,6 +65,19 @@
       </div>
     </section>
 
+    <!-- ========== 账户总览 ========== -->
+    <section class="section account-section" aria-labelledby="account-overview-title">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title" id="account-overview-title">账户总览</h2>
+          <p class="section-subtitle">资金、保证金与风险状态</p>
+        </div>
+      </div>
+      <div class="account-overview-card" id="account-overview">
+        <!-- 由 JS 渲染 -->
+      </div>
+    </section>
+
     <!-- ========== 快捷控制 ========== -->
     <section class="section quick-section">
       <div class="section-header">
@@ -134,15 +147,28 @@
       </div>
     </section>
 
-    <!-- ========== 投资持仓 ========== -->
+    <!-- ========== 期货持仓 ========== -->
     <section class="section position-section">
       <div class="section-header">
         <div>
-          <h2 class="section-title">投资持仓</h2>
-          <p class="section-subtitle">成本、目标与风险边界</p>
+          <h2 class="section-title">期货持仓</h2>
+          <p class="section-subtitle">价格、仓位与操作计划</p>
         </div>
       </div>
       <div class="position-list" id="position-list">
+        <!-- 由 JS 渲染 -->
+      </div>
+    </section>
+
+    <!-- ========== 最近交易记录 ========== -->
+    <section class="section trade-log-section" aria-labelledby="trade-log-title">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title" id="trade-log-title">最近交易记录</h2>
+          <p class="section-subtitle">每一次操作，留下一条决策线索</p>
+        </div>
+      </div>
+      <div class="trade-log-list" id="trade-log-list">
         <!-- 由 JS 渲染 -->
       </div>
     </section>
@@ -213,6 +239,23 @@
     </main>
   </section>
 
+  <!-- ========== 数据管理页面 ========== -->
+  <section class="app-view secondary-view data-management-view" id="view-data" data-view="data" hidden>
+    <header class="view-header">
+      <h1 class="view-title">数据管理</h1>
+      <p class="view-subtitle">导入 AI 生成的 JSON，更新驾驶舱数据</p>
+    </header>
+    <main class="view-main">
+      <section class="view-section" aria-labelledby="data-management-title">
+        <div class="view-section-heading">
+          <h2 class="view-section-title" id="data-management-title">JSON 数据导入</h2>
+          <span class="mock-data-label">本地保存</span>
+        </div>
+        <div class="data-import-panel" id="data-import-panel"></div>
+      </section>
+    </main>
+  </section>
+
   <!-- ========== Tesla 控制页面 ========== -->
   <section class="app-view tesla-control-view" id="view-tesla" data-view="tesla" hidden>
     <header class="tesla-control-header">
@@ -259,8 +302,13 @@
   </nav>
 
   <!-- 数据与逻辑 -->
+  <script src="dataStore.js"></script>
+  <script src="futuresData.js"></script>
+    <script src="vehicleData.js"></script>
+  <script src="projectData.js"></script>
+  <script src="accountData.js"></script>
+  <script src="tradeLog.js"></script>
   <script src="data.js"></script>
-  <script src="futureData.js"></script>
   <script src="pages.js"></script>
   <script src="script.js"></script>
 </body>

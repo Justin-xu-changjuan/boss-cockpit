@@ -3,57 +3,22 @@
  * -----------------------------------------
  * Boss Cockpit App 页面架构
  * - 管理五个底部 Tab 的显示、历史记录与滚动位置
- * - 使用 data.js / futureData.js 的模拟数据渲染次级页面
+ * - 使用独立数据模块渲染次级页面
  * - 后续真实接口接入时，只需替换数据服务，不需要重做页面结构
  */
 
 (() => {
-  const validPages = ['home', 'project', 'file', 'me'];
+  const validPages = ['home', 'project', 'file', 'me', 'data'];
   const pageNames = {
     home: '老板驾驶舱',
     project: '项目',
     file: '文件',
-    me: '我的'
+    me: '我的',
+    data: '数据管理'
   };
   const marketEntryConfig = {
     shortcutName: 'OpenWenhua',
     downloadUrl: 'https://app.wenhua.com.cn/download.html'
-  };
-  const teslaVehicles = {
-    'tesla-model-x': {
-      id: 'tesla-model-x',
-      name: 'Tesla Model X',
-      colorName: '白色车身',
-      tone: 'white',
-      mark: 'X',
-      shortcuts: {
-        trunk: 'X_OpenTrunk',
-        rightRear: 'X_OpenRightRear',
-        leftRear: 'X_OpenLeftRear',
-        driverDoor: 'X_OpenDriverDoor',
-        closeRearDoors: 'X_CloseRearDoors',
-        climate: 'X_ClimateOn'
-      }
-    },
-    'tesla-model-3': {
-      id: 'tesla-model-3',
-      name: 'Tesla Model 3',
-      colorName: '黑色车身',
-      tone: 'black',
-      mark: '3',
-      shortcuts: {
-        trunk: '3_OpenTrunk',
-        climate: '3_ClimateOn'
-      }
-    }
-  };
-  const teslaCommands = {
-    trunk: { label: '打开后备箱', icon: '▱' },
-    climate: { label: '打开空调', icon: '°' },
-    rightRear: { label: '打开右侧后门', icon: '↗' },
-    leftRear: { label: '打开左侧后门', icon: '↖' },
-    driverDoor: { label: '打开主驾驶门', icon: '↖' },
-    closeRearDoors: { label: '关闭后侧车门', icon: '⇵' }
   };
   const scrollPositions = new Map();
   let marketLaunchInProgress = false;
@@ -95,8 +60,9 @@
       view.setAttribute('aria-hidden', String(!isTarget));
     });
 
+    const activeTabPage = targetPage === 'data' ? 'me' : targetPage;
     document.querySelectorAll('.nav-item').forEach(item => {
-      const isActive = item.dataset.page === targetPage;
+      const isActive = item.dataset.page === activeTabPage;
       item.classList.toggle('active', isActive);
       if (isActive) item.setAttribute('aria-current', 'page');
       else item.removeAttribute('aria-current');
@@ -123,7 +89,8 @@
   }
 
   function getTeslaVehicle(vehicleId) {
-    return teslaVehicles[vehicleId] || teslaVehicles['tesla-model-3'];
+    const vehicles = window.vehicleData || [];
+    return vehicles.find(vehicle => vehicle.id === vehicleId) || vehicles[0];
   }
 
   function renderTeslaControl(vehicleId) {
@@ -133,26 +100,21 @@
     const feedback = document.getElementById('tesla-feedback');
     if (!hero || !commandGrid || !feedback) return;
 
-    const commandIds = vehicle.id === 'tesla-model-x'
-      ? ['trunk', 'rightRear', 'leftRear', 'driverDoor', 'closeRearDoors', 'climate']
-      : ['trunk', 'climate'];
-
     hero.innerHTML = `
       <div class="tesla-control-hero ${vehicle.tone}">
         <div class="tesla-control-vehicle-mark" aria-hidden="true">${vehicle.mark}</div>
         <div class="tesla-control-vehicle-copy">
           <span class="tesla-control-kicker">TESLA CONTROL</span>
           <h1>${vehicle.name}</h1>
-          <span>${vehicle.colorName} · 状态模拟</span>
+          <span>${vehicle.colorName} · ${vehicle.status || '状态模拟'}</span>
         </div>
         <span class="tesla-online-badge"><i aria-hidden="true"></i>快捷指令</span>
       </div>
     `;
 
-    commandGrid.innerHTML = commandIds.map(commandId => {
-      const command = teslaCommands[commandId];
+    commandGrid.innerHTML = (vehicle.controls || []).map(command => {
       return `
-        <button class="tesla-command-button" type="button" data-command="${commandId}">
+        <button class="tesla-command-button" type="button" data-command="${command.id}">
           <span class="tesla-command-icon" aria-hidden="true">${command.icon}</span>
           <span class="tesla-command-label">${command.label}</span>
           <span class="tesla-command-state">Shortcut</span>
@@ -172,8 +134,8 @@
     if (button.disabled) return;
 
     const feedback = document.getElementById('tesla-feedback');
-    const command = teslaCommands[button.dataset.command];
-    const shortcutName = vehicle.shortcuts?.[button.dataset.command];
+    const command = (vehicle.controls || []).find(item => item.id === button.dataset.command);
+    const shortcutName = command?.shortcut;
     if (!feedback || !command || !shortcutName) return;
 
     window.clearTimeout(teslaCommandTimer);
@@ -278,7 +240,7 @@
   }
 
   function openTeslaControl(vehicleId) {
-    if (!teslaVehicles[vehicleId]) return;
+    if (!(window.vehicleData || []).some(vehicle => vehicle.id === vehicleId)) return;
     window.location.hash = vehicleId;
   }
 
@@ -363,11 +325,6 @@
     if (!list) return;
 
     const projects = window.projects || [];
-    const nextSteps = {
-      'proj-ai': '合作方沟通',
-      'proj-ti': '完善项目资料'
-    };
-
     list.innerHTML = projects.map(project => `
       <article class="page-project-card">
         <div class="page-project-heading">
@@ -375,11 +332,11 @@
             <h3>${project.name}</h3>
             <span>${project.status}</span>
           </div>
-          <span class="page-state-badge">推进中</span>
+          <span class="page-state-badge">${project.status || '推进中'}</span>
         </div>
         <div class="page-project-next">
           <span>下一步</span>
-          <strong>${nextSteps[project.id] || '持续推进'}</strong>
+          <strong>${project.nextStep || '持续推进'}</strong>
         </div>
         <div class="page-progress-copy">
           <span>当前进度</span>
@@ -457,14 +414,15 @@
     `;
 
     const settingItems = [
-      { id: 'data', name: '数据连接', value: '模拟数据', symbol: '⇄' },
+      { id: 'data-management', name: '数据管理', value: 'JSON 导入', symbol: '⇄', targetPage: 'data' },
+      { id: 'data-connection', name: '数据连接', value: '模拟数据', symbol: '⌁' },
       { id: 'notification', name: '通知与提醒', value: '尚未接入', symbol: '◌' },
       { id: 'appearance', name: '外观模式', value: '深色', symbol: '◐' },
       { id: 'app', name: 'App 模式', value: 'PWA Standalone', symbol: '◇' }
     ];
 
     settings.innerHTML = settingItems.map(item => `
-      <button class="settings-row page-action" type="button" data-id="${item.id}">
+      <button class="settings-row page-action" type="button" data-id="${item.id}"${item.targetPage ? ` data-target-page="${item.targetPage}"` : ''}>
         <span class="settings-symbol" aria-hidden="true">${item.symbol}</span>
         <span class="settings-name">${item.name}</span>
         <span class="settings-value">${item.value}</span>
@@ -473,14 +431,61 @@
     `).join('');
 
     settings.querySelectorAll('.settings-row').forEach(row => {
-      row.addEventListener('click', () => notify(`${row.querySelector('.settings-name').textContent}（预留）`));
+      row.addEventListener('click', () => {
+        if (row.dataset.targetPage) {
+          window.location.hash = row.dataset.targetPage;
+          return;
+        }
+        notify(`${row.querySelector('.settings-name').textContent}（预留）`);
+      });
     });
   }
 
-  function renderAppPages() {
+  function renderDataPage() {
+    const panel = document.getElementById('data-import-panel');
+    if (!panel) return;
+
+    panel.innerHTML = `
+      <p class="data-import-help">支持模块：<code>futuresData</code>、<code>vehicleData</code>、<code>projectData</code>、<code>accountData</code>、<code>positions</code>、<code>tradeLog</code>，以及首页的重点和文件数据。</p>
+      <textarea class="data-import-textarea" id="data-import-input" spellcheck="false" placeholder='粘贴 JSON，例如：{"positions":[{"code":"RB2610","direction":"多","quantity":6,"multiplier":10,"cost":2997.5}]}'></textarea>
+      <div class="data-import-actions">
+        <button class="data-import-button" type="button" id="data-import-submit">导入数据</button>
+        <button class="data-import-secondary" type="button" id="data-export-copy">复制当前数据</button>
+      </div>
+      <p class="data-import-feedback" id="data-import-feedback" role="status" aria-live="polite">导入后会自动保存到本机。</p>
+    `;
+
+    const input = panel.querySelector('#data-import-input');
+    const feedback = panel.querySelector('#data-import-feedback');
+    panel.querySelector('#data-import-submit').addEventListener('click', () => {
+      try {
+        const modules = window.importBossData(input.value.trim());
+        feedback.className = 'data-import-feedback is-success';
+        feedback.textContent = `已导入 ${modules.join('、')}，首页数据已刷新。`;
+      } catch (error) {
+        feedback.className = 'data-import-feedback is-error';
+        feedback.textContent = `导入失败：${error.message || 'JSON 格式不正确'}`;
+      }
+    });
+    panel.querySelector('#data-export-copy').addEventListener('click', async () => {
+      const json = window.BossData?.exportJSON?.() || '{}';
+      try {
+        await navigator.clipboard.writeText(json);
+        feedback.className = 'data-import-feedback is-success';
+        feedback.textContent = '当前数据已复制，可交给 AI 继续整理。';
+      } catch (error) {
+        input.value = json;
+        feedback.className = 'data-import-feedback';
+        feedback.textContent = '当前数据已填入输入框，请手动复制。';
+      }
+    });
+  }
+
+  function renderAppPages(options = {}) {
     renderProjectPage();
     renderFilePage();
     renderProfilePage();
+    if (!options.skipData) renderDataPage();
   }
 
   function initAppTabs() {
@@ -503,7 +508,7 @@
     });
 
     window.addEventListener('hashchange', () => {
-      if (teslaVehicles[window.location.hash.slice(1)]) {
+      if ((window.vehicleData || []).some(vehicle => vehicle.id === window.location.hash.slice(1))) {
         showTeslaPage(window.location.hash.slice(1));
         return;
       }
@@ -516,7 +521,7 @@
     });
 
     const requestedHash = window.location.hash.slice(1);
-    if (teslaVehicles[requestedHash]) {
+    if ((window.vehicleData || []).some(vehicle => vehicle.id === requestedHash)) {
       window.history.replaceState(null, '', '#home');
       activateAppTab('home', { restoreScroll: false });
       window.setTimeout(() => showTeslaPage(requestedHash), 0);

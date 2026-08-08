@@ -4,7 +4,7 @@
  * 
  * 【未来扩展位置】
  * 1. Tesla 控制：快捷按钮 → iOS Shortcuts URL Scheme
- * 2. 行情接口：已在 futureData.js 预留 getFutureQuotes()
+ * 2. 行情接口：已在 futuresData.js 预留 getFutureQuotes()
  * 3. 数据库：data.js 中的数据可改为 API / IndexedDB
  * 4. AI助手：可接入 Grok / 其他大模型对话页
  */
@@ -13,16 +13,30 @@ document.addEventListener('DOMContentLoaded', () => {
   initSplashScreen();
   initHeader();
   renderOperatingStatus();
+  renderAccountOverview();
   renderExecutiveDashboard();
   renderQuickActions();
   renderTodayFocus();
   renderFutures();
   renderPositions();
+  renderTradeLog();
   renderProjects();
   renderFiles();
   window.renderAppPages?.();
   initBottomNav();
   initTouchFeedback();
+  window.addEventListener('bossdatachange', () => {
+    renderOperatingStatus();
+    renderAccountOverview();
+    renderExecutiveDashboard();
+    renderTodayFocus();
+    renderFutures();
+    renderPositions();
+    renderTradeLog();
+    renderProjects();
+    renderFiles();
+    window.renderAppPages?.({ skipData: true });
+  });
 });
 
 /* ========== App 启动层 ========== */
@@ -160,24 +174,16 @@ function renderQuickActions() {
 
   container.innerHTML = window.quickActions.map(item => {
     if (item.id === 'tesla') {
-      return `
-        <button class="quick-btn tesla-vehicle-card tesla-model-x" type="button" data-vehicle="tesla-model-x">
-          <span class="tesla-vehicle-mark" aria-hidden="true">X</span>
+      return (window.vehicleData || []).map(vehicle => `
+        <button class="quick-btn tesla-vehicle-card tesla-${vehicle.tone || 'default'}" type="button" data-vehicle="${vehicle.id}">
+          <span class="tesla-vehicle-mark" aria-hidden="true">${vehicle.mark || 'T'}</span>
           <span class="quick-copy">
-            <span class="label">Model X</span>
-            <span class="quick-meta"><i aria-hidden="true"></i>白色 · 状态模拟</span>
+            <span class="label">${vehicle.shortName || vehicle.name}</span>
+            <span class="quick-meta"><i aria-hidden="true"></i>${vehicle.colorName || ''} · ${vehicle.status || '状态模拟'}</span>
           </span>
           <span class="quick-arrow" aria-hidden="true">↗</span>
         </button>
-        <button class="quick-btn tesla-vehicle-card tesla-model-3" type="button" data-vehicle="tesla-model-3">
-          <span class="tesla-vehicle-mark" aria-hidden="true">3</span>
-          <span class="quick-copy">
-            <span class="label">Model 3</span>
-            <span class="quick-meta"><i aria-hidden="true"></i>黑色 · 状态模拟</span>
-          </span>
-          <span class="quick-arrow" aria-hidden="true">↗</span>
-        </button>
-      `;
+      `).join('');
     }
 
     return `
@@ -245,7 +251,7 @@ async function renderFutures() {
   grid.innerHTML = '<div class="loading">加载行情中...</div>';
 
   try {
-    // 【行情接口位置】调用 futureData.js 中的方法
+    // 【行情接口位置】调用 futuresData.js 中的方法
     const data = await window.getFutureQuotes();
 
     const renderMiniCard = item => {
@@ -334,13 +340,76 @@ function formatPrice(price) {
   return price.toLocaleString('zh-CN', { maximumFractionDigits: 1 });
 }
 
+function formatMoney(amount) {
+  return Math.abs(Number(amount) || 0).toLocaleString('zh-CN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function calculatePositionPnl(pos, quotes = (window.futuresData || window.futureData || [])) {
+  const direction = String(pos.direction || '').toLowerCase();
+  const isShort = ['空', '空头', 'short', 'sell'].includes(direction);
+  const quote = quotes.find(item => item.code === pos.code || item.name === pos.name);
+  const currentPrice = Number(pos.currentPrice ?? quote?.price);
+  const quantity = Number(pos.quantity ?? pos.lots ?? 0);
+  const multiplier = Number(pos.multiplier ?? (pos.code === 'RB2610' ? 10 : 1));
+  if (!Number.isFinite(currentPrice) || !Number.isFinite(Number(pos.cost))) return 0;
+  return (isShort ? Number(pos.cost) - currentPrice : currentPrice - Number(pos.cost)) * multiplier * quantity;
+}
+
+function renderAccountOverview() {
+  const container = document.getElementById('account-overview');
+  if (!container) return;
+
+  const account = window.accountData || {};
+  const totalFloatingPnl = (window.positions || [])
+    .reduce((total, position) => total + calculatePositionPnl(position), 0);
+  const equity = Number(account.equity);
+  const margin = Number(account.margin ?? account.occupiedMargin);
+  const riskRatio = Number.isFinite(equity) && equity > 0 && Number.isFinite(margin)
+    ? (margin / equity) * 100
+    : null;
+  const pnlClass = totalFloatingPnl >= 0 ? 'account-value-up' : 'account-value-down';
+  const pnlSign = totalFloatingPnl >= 0 ? '+' : '-';
+  const formatAccountAmount = value => Number.isFinite(Number(value))
+    ? `¥${formatMoney(Number(value))}`
+    : '待接入';
+
+  container.innerHTML = `
+    <div class="account-equity-row">
+      <div>
+        <span class="account-label">账户权益</span>
+        <strong class="account-equity-value">${formatAccountAmount(account.equity)}</strong>
+      </div>
+      <span class="account-status-dot"><i aria-hidden="true"></i>运行正常</span>
+    </div>
+    <div class="account-metric-grid">
+      <div><span>可用资金</span><strong>${formatAccountAmount(account.availableFunds)}</strong></div>
+      <div><span>持仓保证金</span><strong>${formatAccountAmount(account.margin ?? account.occupiedMargin)}</strong></div>
+      <div><span>总浮盈亏</span><strong class="${pnlClass}">${pnlSign}¥${formatMoney(totalFloatingPnl)}</strong></div>
+      <div><span>风险比例</span><strong>${riskRatio === null ? '待接入' : `${riskRatio.toFixed(2)}%`}</strong></div>
+    </div>
+  `;
+}
+
 /* ========== 模块4：持仓观察 ========== */
 function renderPositions() {
   const container = document.getElementById('position-list');
   if (!container || !window.positions) return;
 
+  const quotes = window.futuresData || window.futureData || [];
   container.innerHTML = window.positions.map(pos => {
-    const dirClass = pos.direction === '多' ? 'long' : 'short';
+    const direction = String(pos.direction || '').toLowerCase();
+    const isShort = ['空', '空头', 'short', 'sell'].includes(direction);
+    const dirClass = isShort ? 'short' : 'long';
+    const quote = quotes.find(item => item.code === pos.code || item.name === pos.name);
+    const currentPrice = Number(pos.currentPrice ?? quote?.price);
+    const quantity = Number(pos.quantity ?? pos.lots ?? 0);
+    const floatingPnl = calculatePositionPnl(pos, quotes);
+    const pnlClass = floatingPnl >= 0 ? 'position-pnl-up' : 'position-pnl-down';
+    const pnlSign = floatingPnl > 0 ? '+' : '';
+    const plan = pos.plan || pos.note || '保持观察';
     return `
       <div class="position-card">
         <div class="position-header">
@@ -349,24 +418,67 @@ function renderPositions() {
         </div>
         <div class="position-grid">
           <div class="position-field">
+            <span class="position-label">当前价格</span>
+            <span class="position-value">${Number.isFinite(currentPrice) ? formatPrice(currentPrice) : '—'}</span>
+          </div>
+          <div class="position-field">
+            <span class="position-label">持仓数量</span>
+            <span class="position-value">${quantity || '—'} 手</span>
+          </div>
+          <div class="position-field">
             <span class="position-label">成本</span>
-            <span class="position-value">${pos.cost}</span>
+            <span class="position-value">${Number.isFinite(Number(pos.cost)) ? formatPrice(Number(pos.cost)) : '—'}</span>
+          </div>
+          <div class="position-field">
+            <span class="position-label">浮盈亏金额</span>
+            <span class="position-value ${pnlClass}">${pnlSign}¥${formatMoney(floatingPnl)}</span>
           </div>
           <div class="position-field">
             <span class="position-label">目标</span>
-            <span class="position-value">${pos.target}</span>
+            <span class="position-value">${pos.target ?? '—'}</span>
           </div>
           <div class="position-field">
             <span class="position-label">止损</span>
-            <span class="position-value">${pos.stopLoss}</span>
-          </div>
-          <div class="position-field">
-            <span class="position-label">备注</span>
-            <span class="position-value" style="font-size:13px">${pos.note ? '有' : '-'}</span>
+            <span class="position-value">${pos.stopLoss ?? '—'}</span>
           </div>
         </div>
-        ${pos.note ? `<div class="position-note">${pos.note}</div>` : ''}
+        <div class="position-note"><span>操作计划</span>${plan}</div>
       </div>
+    `;
+  }).join('');
+}
+
+/* ========== 模块5：交易日志 ========== */
+function renderTradeLog() {
+  const container = document.getElementById('trade-log-list');
+  if (!container) return;
+
+  const logs = window.tradeLog || [];
+  if (!logs.length) {
+    container.innerHTML = '<div class="trade-log-empty">暂无交易记录</div>';
+    return;
+  }
+
+  container.innerHTML = logs.slice(0, 5).map(log => {
+    const directionClass = ['空', '空头', 'short', 'sell'].includes(String(log.direction || '').toLowerCase()) ? 'short' : 'long';
+    const price = Number(log.price);
+    return `
+      <article class="trade-log-card">
+        <div class="trade-log-head">
+          <div>
+            <strong>${log.symbol || log.code || '未命名品种'}</strong>
+            <span>${log.date || '日期待补充'}</span>
+          </div>
+          <span class="trade-log-direction ${directionClass}">${log.direction || '—'}</span>
+        </div>
+        <div class="trade-log-metrics">
+          <div><span>价格</span><strong>${Number.isFinite(price) ? formatPrice(price) : '—'}</strong></div>
+          <div><span>数量</span><strong>${log.quantity ?? '—'} 手</strong></div>
+          <div><span>操作</span><strong>${log.action || '—'}</strong></div>
+        </div>
+        <div class="trade-log-reason"><span>原因</span>${log.reason || '—'}</div>
+        ${log.note ? `<div class="trade-log-note">${log.note}</div>` : ''}
+      </article>
     `;
   }).join('');
 }
@@ -376,30 +488,29 @@ function renderProjects() {
   const container = document.getElementById('project-list');
   if (!container || !window.projects) return;
 
-  const nextSteps = {
-    'proj-ai': '合作方沟通',
-    'proj-ti': '完善项目资料'
-  };
-
-  container.innerHTML = window.projects.map(proj => `
+  container.innerHTML = window.projects.map(proj => {
+    const progress = Math.max(0, Math.min(100, Number(proj.progress) || 0));
+    return `
     <article class="project-card">
       <div class="project-card-head">
         <div>
           <span class="project-kicker">KEY PROJECT</span>
           <div class="project-name">${proj.name}</div>
         </div>
-        <span class="project-live-state">推进中</span>
+        <span class="project-live-state">${proj.status || '推进中'}</span>
       </div>
       <div class="project-details">
         <div><span>阶段</span><strong>${proj.status}</strong></div>
-        <div><span>下一步</span><strong>${nextSteps[proj.id] || '持续推进'}</strong></div>
+        <div><span>进度</span><strong>${progress}%</strong></div>
+        <div><span>下一步</span><strong>${proj.nextStep || '持续推进'}</strong></div>
       </div>
-      <div class="project-progress" aria-label="进度 ${proj.progress}%">
-        <span style="width:${proj.progress}%"></span>
+      <div class="project-progress" aria-label="进度 ${progress}%">
+        <span style="width:${progress}%"></span>
       </div>
       <button class="btn-detail" data-id="${proj.id}">查看项目 <span aria-hidden="true">→</span></button>
     </article>
-  `).join('');
+  `;
+  }).join('');
 
   container.querySelectorAll('.btn-detail').forEach(btn => {
     btn.addEventListener('click', () => {

@@ -991,6 +991,220 @@ main {
   }
 }
 
+/* ========== iPhone 竖屏适配（不改变桌面端布局） ========== */
+@media (max-width: 600px) {
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 28px);
+  }
+
+  .app-header,
+  .app-main,
+  .secondary-view,
+  .tesla-control-view {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .app-header {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-top: max(20px, calc(env(safe-area-inset-top) + 8px));
+  }
+
+  .app-title { font-size: clamp(25px, 7vw, 30px); }
+  .header-time { font-size: clamp(22px, 6vw, 26px); }
+  .welcome-text { font-size: 17px; }
+
+  .section {
+    margin-bottom: 32px;
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+
+  .section-title { font-size: clamp(19px, 5.5vw, 22px); }
+  .section-subtitle { font-size: 12px; }
+
+  /* 手机端所有信息流改为自适应网格，页面不再出现横向滚动。 */
+  .quick-grid,
+  .market-carousel,
+  .executive-board,
+  .position-list {
+    display: grid;
+    gap: 10px;
+    overflow: visible;
+    padding: 0;
+    scroll-snap-type: none;
+    width: 100%;
+  }
+
+  .quick-grid,
+  .market-carousel,
+  .executive-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .position-list { grid-template-columns: minmax(0, 1fr); }
+
+  .quick-btn,
+  .resource-card,
+  .market-mini,
+  .position-card {
+    box-sizing: border-box;
+    flex: none;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .quick-btn {
+    min-height: 104px;
+    padding: 14px 12px;
+  }
+
+  .quick-btn .label,
+  .quick-meta,
+  .resource-name,
+  .resource-value,
+  .future-name,
+  .future-code,
+  .project-name,
+  .trade-log-card,
+  .account-overview-card {
+    overflow-wrap: anywhere;
+  }
+
+  .market-carousel .market-mini {
+    min-height: 142px;
+    padding: 14px;
+  }
+
+  .market-featured .future-price { font-size: clamp(40px, 12vw, 52px); }
+  .market-position-summary { gap: 8px; }
+  .market-position-summary > div + div { padding-left: 10px; }
+
+  .position-card { padding: 16px; }
+  .position-grid { gap: 10px; }
+  .position-value { font-size: 13px; }
+
+  .account-equity-value { font-size: clamp(26px, 8vw, 31px); }
+  .account-metric-grid { gap: 14px 10px; }
+
+  .trade-log-metrics { gap: 8px; }
+  .trade-log-metrics > div { min-width: 0; }
+
+  .btn-detail,
+  .data-import-button,
+  .data-import-secondary,
+  .settings-row,
+  .page-action,
+  .nav-item {
+    min-height: 44px;
+  }
+
+  .bottom-nav {
+    left: 0;
+    right: 0;
+    width: 100%;
+  }
+
+  .view-main,
+  .tesla-control-main { padding-left: 16px; padding-right: 16px; }
+}
+
+/* ========== 数据管理 ========== */
+.data-import-panel {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 22px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.2);
+  padding: 18px;
+}
+
+.data-import-help {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.65;
+  margin: 0 0 14px;
+}
+
+.data-import-help code {
+  color: #b7d5ff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+}
+
+.data-import-textarea {
+  background: rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-sizing: border-box;
+  color: var(--text-primary);
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  min-height: 190px;
+  padding: 14px;
+  resize: vertical;
+  width: 100%;
+}
+
+.data-import-textarea:focus {
+  border-color: rgba(122, 180, 255, 0.65);
+  box-shadow: 0 0 0 3px rgba(122, 180, 255, 0.12);
+  outline: none;
+}
+
+.data-import-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.data-import-button,
+.data-import-secondary {
+  border-radius: 13px;
+  cursor: pointer;
+  font: inherit;
+  min-height: 44px;
+  padding: 0 16px;
+}
+
+.data-import-button {
+  background: #e8edf6;
+  border: 0;
+  color: #11141a;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.data-import-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.data-import-button:active,
+.data-import-secondary:active { transform: scale(0.97); }
+
+.data-import-feedback {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 13px 2px 0;
+}
+
+.data-import-feedback.is-success { color: #8ee6a6; }
+.data-import-feedback.is-error { color: #ff9b98; }
+
+@media (max-width: 390px) {
+  .data-import-actions { flex-direction: column; }
+  .data-import-button, .data-import-secondary { width: 100%; }
+}
+
 /* ========================================
    第三阶段：首页信息架构与 CEO 控制中心
 ======================================== */
@@ -2307,7 +2521,7 @@ body {
 
 .project-details {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   margin-top: 27px;
 }
 
@@ -2465,6 +2679,136 @@ body {
   flex: 0 0 270px;
   scroll-snap-align: start;
 }
+
+.position-pnl-up { color: #78df94 !important; }
+.position-pnl-down { color: #ff8e89 !important; }
+
+.account-overview-card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(92, 174, 255, 0.1), transparent 38%),
+    var(--surface-solid);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 18px;
+}
+
+.account-equity-row {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+}
+
+.account-label,
+.account-metric-grid span {
+  color: var(--text-tertiary);
+  display: block;
+  font-size: 11px;
+}
+
+.account-equity-value {
+  color: var(--text-primary);
+  display: block;
+  font-size: 29px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.035em;
+  margin-top: 8px;
+}
+
+.account-status-dot {
+  align-items: center;
+  color: #80df99;
+  display: flex;
+  font-size: 10px;
+  gap: 6px;
+}
+
+.account-status-dot i {
+  background: #54d77b;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(84, 215, 123, 0.7);
+  display: block;
+  height: 6px;
+  width: 6px;
+}
+
+.account-metric-grid {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 16px 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 19px;
+  padding-top: 16px;
+}
+
+.account-metric-grid strong {
+  color: #d9dbe0;
+  display: block;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  margin-top: 6px;
+}
+
+.account-value-up { color: #78df94 !important; }
+.account-value-down { color: #ff8e89 !important; }
+
+.trade-log-list {
+  display: grid;
+  gap: 10px;
+}
+
+.trade-log-card {
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.trade-log-head,
+.trade-log-head > div,
+.trade-log-metrics {
+  align-items: center;
+  display: flex;
+}
+
+.trade-log-head { justify-content: space-between; }
+.trade-log-head > div { align-items: flex-start; flex-direction: column; gap: 5px; }
+.trade-log-head strong { color: var(--text-primary); font-size: 15px; }
+.trade-log-head span { color: var(--text-tertiary); font-size: 11px; }
+
+.trade-log-direction {
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 650;
+  padding: 6px 10px;
+}
+
+.trade-log-direction.long { background: rgba(84, 215, 123, 0.12); color: #7ee19a; }
+.trade-log-direction.short { background: rgba(255, 104, 100, 0.12); color: #ff9993; }
+
+.trade-log-metrics {
+  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+  gap: 0;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding: 12px 0;
+}
+
+.trade-log-metrics > div { display: flex; flex-direction: column; gap: 5px; }
+.trade-log-metrics span,
+.trade-log-reason span { color: var(--text-tertiary); font-size: 10px; }
+.trade-log-metrics strong { color: #d9dbe0; font-size: 13px; }
+
+.trade-log-reason {
+  color: #c5c8cf;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 12px;
+}
+
+.trade-log-reason span { margin-right: 10px; }
+.trade-log-note { color: var(--text-tertiary); font-size: 11px; margin-top: 7px; }
+.trade-log-empty { color: var(--text-tertiary); font-size: 13px; padding: 18px 2px; }
 
 .executive-board {
   background: none;
@@ -3489,4 +3833,44 @@ body {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* 最终移动端覆盖：确保后续阶段样式不会重新引入页面横向滚动。 */
+@media (max-width: 600px) {
+  html, body { max-width: 100%; overflow-x: hidden; }
+  .app-header, .app-main, .secondary-view, .tesla-control-view { max-width: 100%; width: 100%; }
+  .app-header { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  .section { margin-bottom: 32px; padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  .quick-grid, .market-carousel, .executive-board, .position-list {
+    display: grid; gap: 10px; overflow: visible; padding: 0; scroll-snap-type: none; width: 100%;
+  }
+  .quick-grid, .market-carousel, .executive-board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .position-list { grid-template-columns: minmax(0, 1fr); }
+  .quick-btn, .resource-card, .market-mini, .position-card { box-sizing: border-box; flex: none; min-width: 0; width: 100%; }
+  .quick-btn { min-height: 104px; padding: 14px 12px; }
+  .market-carousel .market-mini { min-height: 142px; padding: 14px; }
+  .market-featured .future-price { font-size: clamp(40px, 12vw, 52px); }
+  .position-card { padding: 16px; }
+  .account-equity-value { font-size: clamp(26px, 8vw, 31px); }
+  .quick-btn .label, .quick-meta, .resource-name, .resource-value, .future-name, .future-code, .project-name, .trade-log-card, .account-overview-card { overflow-wrap: anywhere; }
+  .btn-detail, .data-import-button, .data-import-secondary, .settings-row, .page-action, .nav-item { min-height: 44px; }
+  .bottom-nav { left: 0; right: 0; width: 100%; }
+  .view-main, .tesla-control-main { padding-left: 16px; padding-right: 16px; }
+
+  /* 手机首页优先级：账户 → 持仓 → 行情 → Tesla → 项目 → 文件。 */
+  .app-main {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .account-section { order: 1; }
+  .position-section { order: 2; }
+  .market-section { order: 3; }
+  .quick-section { order: 4; }
+  .project-section { order: 5; }
+  .file-section { order: 6; }
+  .trade-log-section { order: 7; }
+  .focus-section { order: 8; }
+  .executive-section { order: 9; }
+  .hero-status-section { order: 10; }
 }
