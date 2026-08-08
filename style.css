@@ -1,0 +1,3492 @@
+/* ========================================
+   老板驾驶舱 - Boss Cockpit
+   设计风格：Tesla App + iPhone 控制中心 + 高级企业App
+   深色、高级、简洁、圆角、大按钮、单手友好
+======================================== */
+
+:root {
+  /* 核心色彩 */
+  --bg-primary: #000000;
+  --bg-secondary: #0d0d0d;
+  --card-bg: #1c1c1e;
+  --card-bg-elevated: #2c2c2e;
+  --card-border: rgba(255, 255, 255, 0.08);
+  
+  /* 文字 */
+  --text-primary: #ffffff;
+  --text-secondary: #8e8e93;
+  --text-tertiary: #636366;
+  
+  /* 强调色 */
+  --accent: #0a84ff;
+  --accent-tesla: #e82127;
+  --success: #30d158;
+  --danger: #ff453a;
+  --warning: #ffd60a;
+  
+  /* 间距与圆角 */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --nav-height: 64px;
+  
+  /* 阴影与模糊 */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --blur: blur(20px);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 12px);
+}
+
+/* ========== 顶部区域 ========== */
+.app-header {
+  padding: 16px 20px 8px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  background: linear-gradient(180deg, #111 0%, transparent 100%);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.app-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #fff 0%, #a0a0a0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-date {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.welcome-text {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* ========== 通用卡片 ========== */
+.section {
+  padding: 0 16px;
+  margin-bottom: 24px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+.section-action {
+  font-size: 14px;
+  color: var(--accent);
+  background: none;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.section-action:active {
+  background: rgba(10, 132, 255, 0.15);
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--card-border);
+  overflow: hidden;
+}
+
+/* ========== 模块1：快捷控制 ========== */
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.quick-btn {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 18px 8px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 92px;
+  position: relative;
+  overflow: hidden;
+}
+
+.quick-btn:active {
+  transform: scale(0.96);
+  background: var(--card-bg-elevated);
+}
+
+.quick-btn .icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.quick-btn .label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* Tesla 特殊强调 */
+.quick-btn.tesla {
+  background: linear-gradient(145deg, #1a1a1a 0%, #2a1010 100%);
+  border-color: rgba(232, 33, 39, 0.3);
+}
+
+.quick-btn.tesla .label {
+  color: #ff6b6b;
+}
+
+.quick-btn.tesla::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-tesla), transparent);
+  opacity: 0.7;
+}
+
+/* ========== 模块2：今日概览 ========== */
+.focus-list {
+  list-style: none;
+}
+
+.focus-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.15s;
+}
+
+.focus-item:last-child {
+  border-bottom: none;
+}
+
+.focus-item:active {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.focus-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.focus-dot.high {
+  background: var(--danger);
+  box-shadow: 0 0 8px rgba(255, 69, 58, 0.5);
+}
+
+.focus-dot.medium {
+  background: var(--warning);
+}
+
+.focus-text {
+  font-size: 15px;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+/* ========== 模块3：期货行情 ========== */
+.futures-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.future-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.future-card:active {
+  transform: scale(0.98);
+  background: var(--card-bg-elevated);
+}
+
+.future-name {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.future-code {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+.future-price {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.future-change {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.future-change.up {
+  color: var(--success);
+}
+
+.future-change.down {
+  color: var(--danger);
+}
+
+.trend-arrow {
+  font-size: 12px;
+}
+
+/* ========== 模块4：持仓观察 ========== */
+.position-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.position-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.position-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.position-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.position-direction {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.position-direction.long {
+  background: rgba(48, 209, 88, 0.15);
+  color: var(--success);
+}
+
+.position-direction.short {
+  background: rgba(255, 69, 58, 0.15);
+  color: var(--danger);
+}
+
+.position-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+}
+
+.position-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.position-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.position-value {
+  font-size: 15px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.position-note {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* ========== 模块5：企业项目 ========== */
+.project-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.project-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.project-info {
+  flex: 1;
+}
+
+.project-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.project-status {
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.project-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.status-research::before {
+  background: var(--warning);
+}
+
+.status-organize::before {
+  background: var(--accent);
+}
+
+.btn-detail {
+  background: rgba(10, 132, 255, 0.12);
+  color: var(--accent);
+  border: none;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.btn-detail:active {
+  background: rgba(10, 132, 255, 0.25);
+}
+
+/* ========== 模块6：文件入口 ========== */
+.file-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.file-item {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  color: inherit;
+}
+
+.file-item:active {
+  transform: scale(0.97);
+  background: var(--card-bg-elevated);
+}
+
+.file-icon {
+  font-size: 28px;
+}
+
+.file-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ========== 底部导航 ========== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--nav-height) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: rgba(28, 28, 30, 0.85);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 100;
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s;
+  height: 100%;
+}
+
+.nav-item.active {
+  color: var(--accent);
+}
+
+.nav-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.nav-label {
+  font-size: 10px;
+  letter-spacing: 0.2px;
+}
+
+/* ========== Toast 提示 ========== */
+.toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background: rgba(44, 44, 46, 0.95);
+  backdrop-filter: blur(20px);
+  color: white;
+  padding: 14px 24px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 500;
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  max-width: 80%;
+  text-align: center;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* ========== 加载状态 ========== */
+.loading {
+  text-align: center;
+  padding: 30px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* ========== 响应与细节优化 ========== */
+@media (max-width: 380px) {
+  .app-title {
+    font-size: 24px;
+  }
+  .future-price {
+    font-size: 20px;
+  }
+  .quick-btn {
+    min-height: 84px;
+    padding: 14px 6px 12px;
+  }
+  .quick-btn .icon {
+    font-size: 24px;
+  }
+}
+
+/* 防止长按菜单等 */
+img, a {
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* 滚动条隐藏（更像App） */
+::-webkit-scrollbar {
+  display: none;
+}
+body {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ========================================
+   第二阶段：CEO App 视觉升级
+======================================== */
+
+:root {
+  --bg-primary: #050507;
+  --bg-secondary: #0b0c10;
+  --card-bg: rgba(28, 29, 34, 0.72);
+  --card-bg-elevated: rgba(48, 50, 58, 0.86);
+  --card-border: rgba(255, 255, 255, 0.12);
+  --glass-surface: linear-gradient(145deg, rgba(255, 255, 255, 0.095), rgba(255, 255, 255, 0.035));
+  --glass-highlight: rgba(255, 255, 255, 0.18);
+  --shadow-card: 0 18px 48px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --blur: blur(24px);
+  --radius-md: 20px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --nav-height: 72px;
+}
+
+html {
+  background: var(--bg-primary);
+  color-scheme: dark;
+}
+
+body {
+  min-height: 100%;
+  background:
+    radial-gradient(circle at 88% -4%, rgba(90, 58, 32, 0.22), transparent 35%),
+    radial-gradient(circle at 8% 22%, rgba(15, 62, 92, 0.16), transparent 32%),
+    var(--bg-primary);
+}
+
+main {
+  width: min(100%, 680px);
+  margin: 0 auto;
+}
+
+.app-header {
+  width: min(100%, 680px);
+  margin: 0 auto;
+  padding: max(18px, env(safe-area-inset-top)) 20px 12px;
+  background: linear-gradient(180deg, rgba(12, 13, 17, 0.94), rgba(12, 13, 17, 0.62) 72%, transparent);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.app-eyebrow {
+  color: #a8a9b1;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.app-title {
+  font-size: clamp(29px, 8vw, 36px);
+  letter-spacing: -0.9px;
+  line-height: 1.1;
+}
+
+.header-date {
+  margin-top: 10px;
+  color: #b2b3bb;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+
+.welcome-text {
+  margin-top: 5px;
+  color: #7f818c;
+  font-size: 14px;
+}
+
+.section {
+  margin-bottom: 28px;
+}
+
+.section-header {
+  margin-bottom: 13px;
+}
+
+.section-title {
+  font-size: 18px;
+  letter-spacing: -0.4px;
+}
+
+.section-action {
+  min-height: 44px;
+  padding: 8px 11px;
+}
+
+.card,
+.quick-btn,
+.future-card,
+.position-card,
+.project-card,
+.file-item {
+  background: var(--glass-surface);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+}
+
+.quick-btn,
+.future-card,
+.position-card,
+.project-card,
+.file-item {
+  border-radius: var(--radius-md);
+}
+
+.quick-btn {
+  min-height: 98px;
+  padding: 17px 8px 14px;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.quick-btn::before,
+.future-card::before,
+.position-card::before,
+.project-card::before,
+.file-item::before {
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.14), transparent 36%);
+  content: '';
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.quick-btn .icon {
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.28));
+  font-size: 30px;
+}
+
+.quick-btn .label {
+  color: #c4c5cc;
+}
+
+.quick-btn:active,
+.future-card:active,
+.btn-detail:active,
+.file-item:active,
+.nav-item:active {
+  transform: scale(0.965);
+}
+
+.quick-btn[data-action="tesla"] {
+  background: linear-gradient(145deg, rgba(58, 22, 25, 0.74), rgba(27, 24, 29, 0.78));
+  border-color: rgba(232, 33, 39, 0.42);
+}
+
+.quick-btn[data-action="tesla"] .label {
+  color: #ff7b7e;
+}
+
+.quick-btn[data-action="ai"] {
+  background: linear-gradient(145deg, rgba(17, 52, 86, 0.7), rgba(26, 29, 38, 0.8));
+  border-color: rgba(10, 132, 255, 0.32);
+}
+
+.quick-btn[data-action="data"] {
+  background: linear-gradient(145deg, rgba(20, 65, 60, 0.62), rgba(25, 31, 37, 0.82));
+}
+
+.quick-btn[data-action="setting"] {
+  background: linear-gradient(145deg, rgba(62, 63, 70, 0.72), rgba(24, 25, 30, 0.82));
+}
+
+.market-status-strip {
+  display: flex;
+  gap: 8px;
+  margin: -2px 0 12px;
+  padding: 0 4px;
+}
+
+.market-status {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+  color: #747782;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 6px 11px;
+}
+
+.market-status.active {
+  background: rgba(10, 132, 255, 0.14);
+  border-color: rgba(10, 132, 255, 0.38);
+  color: #67b4ff;
+}
+
+.future-card {
+  min-height: 142px;
+  overflow: hidden;
+  padding: 16px;
+  position: relative;
+}
+
+.future-name,
+.future-price,
+.future-change {
+  position: relative;
+  z-index: 1;
+}
+
+.future-name {
+  color: #babcc5;
+}
+
+.future-price {
+  font-size: 26px;
+  letter-spacing: -0.8px;
+  margin-top: 8px;
+}
+
+.future-change {
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+.position-card,
+.project-card,
+.file-item {
+  overflow: hidden;
+  position: relative;
+}
+
+.position-card > *,
+.project-card > *,
+.file-item > * {
+  position: relative;
+  z-index: 1;
+}
+
+.bottom-nav {
+  height: calc(var(--nav-height) + var(--safe-bottom));
+  padding: 7px 10px var(--safe-bottom);
+  background: rgba(18, 19, 24, 0.82);
+  border-top-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 -18px 42px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(28px) saturate(135%);
+  -webkit-backdrop-filter: blur(28px) saturate(135%);
+}
+
+.nav-item {
+  min-height: 44px;
+  border-radius: 16px;
+  touch-action: manipulation;
+}
+
+.nav-item.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #72b9ff;
+}
+
+.nav-icon {
+  font-size: 21px;
+}
+
+.splash-screen {
+  align-items: center;
+  background: #050507;
+  display: flex;
+  flex-direction: column;
+  inset: 0;
+  justify-content: center;
+  opacity: 1;
+  pointer-events: none;
+  position: fixed;
+  transition: opacity 0.42s ease, visibility 0.42s ease;
+  visibility: visible;
+  z-index: 2000;
+}
+
+.splash-screen.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.splash-mark {
+  height: 92px;
+  margin-bottom: 28px;
+  position: relative;
+  width: 92px;
+}
+
+.splash-mark-ring {
+  border-radius: 50%;
+  display: block;
+  inset: 9px;
+  position: absolute;
+  transform: rotate(-28deg);
+}
+
+.splash-mark-ring-outer {
+  border: 8px solid #2d2e33;
+  border-right-color: #ef3b42;
+  border-top-color: #777980;
+}
+
+.splash-mark-ring-inner {
+  border: 5px solid #b5aa9e;
+  inset: 27px;
+  transform: rotate(134deg);
+}
+
+.splash-mark-light {
+  background: #f1c875;
+  border: 3px solid rgba(241, 200, 117, 0.18);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(241, 200, 117, 0.55);
+  height: 8px;
+  position: absolute;
+  right: 9px;
+  bottom: 18px;
+  width: 8px;
+}
+
+.splash-title {
+  color: #f5f5f7;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+}
+
+.splash-subtitle {
+  color: #777985;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  margin-top: 10px;
+}
+
+@media (max-width: 390px) {
+  .app-header {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .quick-grid,
+  .futures-grid,
+  .file-grid {
+    gap: 10px;
+  }
+
+  .quick-btn {
+    min-height: 94px;
+  }
+
+  .future-card {
+    min-height: 136px;
+    padding: 14px;
+  }
+
+  .future-price {
+    font-size: 23px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ========================================
+   第三阶段：首页信息架构与 CEO 控制中心
+======================================== */
+
+:root {
+  --bg-primary: #050608;
+  --bg-secondary: #0a0b0e;
+  --surface: rgba(20, 21, 26, 0.88);
+  --surface-solid: #111217;
+  --surface-raised: #17191f;
+  --surface-muted: #0c0d11;
+  --line: rgba(255, 255, 255, 0.085);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --text-primary: #f5f6f8;
+  --text-secondary: #a8abb4;
+  --text-tertiary: #858892;
+  --accent: #5caeff;
+  --accent-tesla: #ff4f55;
+  --success: #54d77b;
+  --danger: #ff6864;
+  --warning: #f1c75b;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 16px;
+  --radius-xl: 16px;
+  --nav-height: 76px;
+  --shadow-card: none;
+  --z-nav: 20;
+  --z-splash: 40;
+  --z-toast: 50;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at 88% 4%, rgba(64, 88, 123, 0.14), transparent 28%),
+    radial-gradient(circle at 6% 28%, rgba(91, 36, 39, 0.11), transparent 25%),
+    var(--bg-primary);
+  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 28px);
+}
+
+body::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent 22%);
+  content: '';
+  inset: 0;
+  pointer-events: none;
+  position: fixed;
+}
+
+.app-main,
+.app-header {
+  position: relative;
+  z-index: 1;
+}
+
+.app-main {
+  width: min(100%, 720px);
+}
+
+.app-header {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: max(24px, calc(env(safe-area-inset-top) + 8px)) 20px 28px;
+  position: relative;
+  top: auto;
+  width: min(100%, 720px);
+}
+
+.header-brand-row {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+}
+
+.header-brand-copy {
+  min-width: 0;
+}
+
+.app-title {
+  background: none;
+  color: var(--text-primary);
+  font-size: 30px;
+  font-weight: 720;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  text-wrap: balance;
+  -webkit-background-clip: initial;
+  -webkit-text-fill-color: currentColor;
+}
+
+.app-subtitle {
+  color: #8c8f99;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.17em;
+  margin-top: 8px;
+}
+
+.command-mark {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  flex: 0 0 46px;
+  height: 46px;
+  position: relative;
+  width: 46px;
+}
+
+.command-mark-ring {
+  border: 4px solid #656872;
+  border-bottom-color: #bd9c61;
+  border-radius: 50%;
+  border-right-color: var(--accent-tesla);
+  inset: 10px;
+  position: absolute;
+  transform: rotate(-24deg);
+}
+
+.command-mark-light {
+  background: #f4cf81;
+  border-radius: 50%;
+  bottom: 8px;
+  box-shadow: 0 0 8px rgba(244, 207, 129, 0.55);
+  height: 4px;
+  position: absolute;
+  right: 8px;
+  width: 4px;
+}
+
+.header-context {
+  align-items: flex-end;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 18px;
+}
+
+.welcome-text {
+  color: var(--text-secondary);
+  font-size: 15px;
+  margin: 0 16px 3px 0;
+}
+
+.header-datetime {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+}
+
+.header-time {
+  color: var(--text-primary);
+  font-size: 25px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.header-date {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  margin: 7px 0 0;
+}
+
+.section {
+  margin-bottom: 34px;
+  padding: 0 16px;
+}
+
+.section-header {
+  align-items: flex-end;
+  margin-bottom: 14px;
+  padding: 0 2px;
+}
+
+.section-title {
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.section-subtitle {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: 5px;
+}
+
+.section-action {
+  color: var(--accent);
+  font-size: 13px;
+  min-height: 44px;
+  padding: 8px 2px 8px 12px;
+}
+
+.section-action:focus-visible,
+.quick-btn:focus-visible,
+.btn-detail:focus-visible,
+.file-item:focus-visible,
+.nav-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* 今日经营状态：一块控制面，而不是四张 KPI 卡 */
+.operating-panel {
+  background: rgba(20, 22, 28, 0.7);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+  backdrop-filter: blur(22px) saturate(120%);
+  -webkit-backdrop-filter: blur(22px) saturate(120%);
+}
+
+.status-cell {
+  min-height: 112px;
+  padding: 16px;
+}
+
+.status-cell:nth-child(odd) {
+  border-right: 1px solid var(--line);
+}
+
+.status-cell:nth-child(-n + 2) {
+  border-bottom: 1px solid var(--line);
+}
+
+.status-cell-top {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.status-symbol {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  color: #d4d6dc;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 750;
+  height: 25px;
+  justify-content: center;
+  width: 25px;
+}
+
+.status-cell[data-tone="market"] .status-symbol {
+  background: rgba(84, 215, 123, 0.12);
+  color: var(--success);
+}
+
+.status-cell[data-tone="project"] .status-symbol {
+  background: rgba(92, 174, 255, 0.12);
+  color: var(--accent);
+}
+
+.status-cell[data-tone="file"] .status-symbol {
+  background: rgba(189, 156, 97, 0.13);
+  color: #d4b57b;
+}
+
+.status-cell[data-tone="risk"] .status-symbol {
+  background: rgba(255, 104, 100, 0.12);
+  color: var(--danger);
+}
+
+.status-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 550;
+}
+
+.status-value {
+  color: var(--text-primary);
+  display: block;
+  font-size: 17px;
+  font-weight: 650;
+  margin-top: 13px;
+}
+
+.status-note {
+  color: var(--text-tertiary);
+  display: block;
+  font-size: 11px;
+  line-height: 1.35;
+  margin-top: 5px;
+}
+
+/* CEO 资源盘：一张主面板 + 分隔行 */
+.executive-board {
+  background: linear-gradient(145deg, rgba(26, 29, 37, 0.96), rgba(15, 16, 21, 0.98));
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.executive-asset-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  min-height: 92px;
+  padding: 18px;
+}
+
+.executive-label {
+  color: var(--text-tertiary);
+  display: block;
+  font-size: 12px;
+}
+
+.executive-value {
+  color: var(--text-primary);
+  display: block;
+  font-size: 19px;
+  font-weight: 650;
+  margin-top: 7px;
+}
+
+.executive-asset-note {
+  color: #858892;
+  font-size: 11px;
+  max-width: 112px;
+  text-align: right;
+}
+
+.executive-resource-list {
+  border-top: 1px solid var(--line);
+}
+
+.resource-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  min-height: 68px;
+  padding: 12px 18px;
+}
+
+.resource-row + .resource-row {
+  border-top: 1px solid var(--line);
+}
+
+.resource-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.resource-name {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.resource-value {
+  color: #dfe1e6;
+  font-size: 14px;
+  font-weight: 580;
+  margin-top: 5px;
+}
+
+.resource-state {
+  background: rgba(255, 255, 255, 0.055);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 650;
+  margin-left: 12px;
+  padding: 6px 9px;
+}
+
+.resource-state.active {
+  background: rgba(84, 215, 123, 0.1);
+  color: #77df94;
+}
+
+.resource-state.focus {
+  background: rgba(92, 174, 255, 0.11);
+  color: #80bdff;
+}
+
+.resource-state.pending {
+  color: #8a8d96;
+}
+
+/* 快捷入口：Tesla 为主控制，其余能力为辅助卡 */
+.quick-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.quick-btn {
+  align-items: start;
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  color: var(--text-primary);
+  display: grid;
+  gap: 13px;
+  grid-template-columns: 1fr auto;
+  min-height: 120px;
+  overflow: hidden;
+  padding: 15px;
+  position: relative;
+  text-align: left;
+  touch-action: manipulation;
+  transition: background-color 180ms ease-out, border-color 180ms ease-out, transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.quick-btn::before,
+.quick-btn::after,
+.quick-btn.tesla::after {
+  content: none;
+}
+
+.quick-btn[data-action="tesla"] {
+  align-items: center;
+  background: linear-gradient(135deg, rgba(74, 24, 29, 0.96), rgba(25, 20, 24, 0.98));
+  border-color: rgba(255, 79, 85, 0.25);
+  grid-column: 1 / -1;
+  grid-template-columns: 52px 1fr auto;
+  min-height: 94px;
+}
+
+.quick-btn[data-action="ai"] {
+  background: linear-gradient(145deg, rgba(20, 46, 72, 0.95), rgba(18, 20, 26, 0.98));
+  border-color: rgba(92, 174, 255, 0.2);
+}
+
+.quick-btn[data-action="data"] {
+  background: linear-gradient(145deg, rgba(18, 51, 47, 0.92), rgba(18, 20, 24, 0.98));
+}
+
+.quick-btn[data-action="setting"] {
+  background: linear-gradient(145deg, #202127, #121318);
+}
+
+.quick-icon {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.055);
+  border-radius: 12px;
+  display: inline-flex;
+  font-size: 25px;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+
+.quick-btn[data-action="tesla"] .quick-icon {
+  background: rgba(255, 255, 255, 0.08);
+  height: 52px;
+  width: 52px;
+}
+
+.quick-copy {
+  align-self: end;
+  display: flex;
+  flex-direction: column;
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.quick-btn[data-action="tesla"] .quick-copy {
+  align-self: center;
+  grid-column: auto;
+}
+
+.quick-btn .label {
+  color: #eceef2;
+  font-size: 15px;
+  font-weight: 620;
+}
+
+.quick-btn[data-action="tesla"] .label {
+  color: #fff2f3;
+}
+
+.quick-meta {
+  color: #7f828d;
+  font-size: 11px;
+  margin-top: 5px;
+}
+
+.quick-btn[data-action="tesla"] .quick-meta {
+  color: #b88d91;
+}
+
+.quick-arrow {
+  color: #70737d;
+  font-size: 14px;
+  justify-self: end;
+  line-height: 1;
+}
+
+.quick-btn[data-action="tesla"] .quick-arrow {
+  color: #dc8a8e;
+}
+
+.quick-btn:active,
+.future-card:active,
+.btn-detail:active,
+.file-item:active,
+.nav-item:active {
+  transform: scale(0.975);
+}
+
+/* 行情与策略：纵向交易简报 */
+.futures-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr;
+}
+
+.future-card {
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  cursor: pointer;
+  display: block;
+  min-height: 0;
+  overflow: hidden;
+  padding: 17px;
+  position: relative;
+  transition: background-color 180ms ease-out, border-color 180ms ease-out, transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.future-card::before {
+  content: none;
+}
+
+.future-card-head,
+.future-quote-row {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.future-identity {
+  display: flex;
+  flex-direction: column;
+}
+
+.future-name {
+  color: #e7e9ed;
+  display: block;
+  font-size: 15px;
+  font-weight: 620;
+}
+
+.future-code {
+  color: var(--text-tertiary);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+
+.trend-badge {
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 650;
+  padding: 6px 9px;
+}
+
+.trend-badge.up {
+  background: rgba(84, 215, 123, 0.1);
+  color: var(--success);
+}
+
+.trend-badge.down {
+  background: rgba(255, 104, 100, 0.1);
+  color: var(--danger);
+}
+
+.future-quote-row {
+  margin-top: 18px;
+}
+
+.future-price {
+  color: var(--text-primary);
+  font-size: 29px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 680;
+  letter-spacing: -0.035em;
+  margin: 0;
+}
+
+.future-change {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  gap: 3px;
+  margin: 0;
+}
+
+.future-insights {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 0.8fr 1.2fr;
+  margin-top: 17px;
+  padding-top: 14px;
+}
+
+.future-insight {
+  display: flex;
+  flex-direction: column;
+}
+
+.future-insight span {
+  color: var(--text-tertiary);
+  font-size: 10px;
+}
+
+.future-insight strong {
+  color: #cdd0d7;
+  font-size: 12px;
+  font-weight: 580;
+  margin-top: 6px;
+}
+
+/* 保留模块：降低卡片感，统一阅读节奏 */
+.card,
+.position-card,
+.project-card,
+.file-item {
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.position-card::before,
+.project-card::before,
+.file-item::before {
+  content: none;
+}
+
+.focus-card {
+  overflow: hidden;
+}
+
+.focus-item {
+  min-height: 52px;
+  padding: 14px 16px;
+}
+
+.focus-text {
+  color: #dfe1e6;
+  font-size: 14px;
+}
+
+.position-list,
+.project-list {
+  gap: 10px;
+}
+
+.position-card,
+.project-card {
+  padding: 17px;
+}
+
+.position-card > *,
+.project-card > *,
+.file-item > * {
+  position: relative;
+  z-index: 1;
+}
+
+.position-note {
+  color: #8c8f98;
+}
+
+.btn-detail {
+  min-height: 44px;
+  padding: 9px 14px;
+}
+
+.file-grid {
+  gap: 10px;
+}
+
+.file-item {
+  min-height: 108px;
+  padding: 18px 14px;
+}
+
+.file-name {
+  color: #b8bbc4;
+}
+
+/* iOS Tab Bar：唯一持续使用的毛玻璃导航层 */
+.bottom-nav {
+  background: rgba(12, 13, 17, 0.78);
+  border-top: 1px solid var(--line-strong);
+  box-shadow: none;
+  height: calc(var(--nav-height) + var(--safe-bottom));
+  padding: 7px 10px max(7px, var(--safe-bottom));
+  z-index: var(--z-nav);
+  backdrop-filter: blur(28px) saturate(135%);
+  -webkit-backdrop-filter: blur(28px) saturate(135%);
+}
+
+.nav-item {
+  border-radius: 12px;
+  color: #8a8d96;
+  min-height: 44px;
+  position: relative;
+  transition: color 180ms ease-out, background-color 180ms ease-out, transform 180ms ease-out;
+}
+
+.nav-item.active {
+  background: rgba(255, 255, 255, 0.055);
+  color: #dfe8f4;
+}
+
+.nav-item.active::after {
+  background: var(--accent);
+  border-radius: 999px;
+  bottom: 3px;
+  content: '';
+  height: 2px;
+  position: absolute;
+  width: 16px;
+}
+
+.nav-icon {
+  font-size: 20px;
+}
+
+.nav-label {
+  font-size: 10px;
+}
+
+.toast {
+  background: rgba(31, 33, 39, 0.96);
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  box-shadow: none;
+  color: var(--text-primary);
+  font-size: 14px;
+  z-index: var(--z-toast);
+}
+
+.splash-screen {
+  z-index: var(--z-splash);
+}
+
+@media (hover: hover) {
+  .quick-btn:hover,
+  .future-card:hover,
+  .file-item:hover {
+    background-color: var(--surface-raised);
+    border-color: var(--line-strong);
+  }
+}
+
+@media (min-width: 600px) {
+  .section {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .futures-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 430px) {
+  .app-header {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (max-width: 365px) {
+  .app-title {
+    font-size: 27px;
+  }
+
+  .app-subtitle {
+    letter-spacing: 0.12em;
+  }
+
+  .status-cell {
+    min-height: 106px;
+    padding: 14px;
+  }
+
+  .status-value {
+    font-size: 15px;
+  }
+
+  .quick-btn {
+    min-height: 112px;
+    padding: 13px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quick-btn,
+  .future-card,
+  .file-item,
+  .nav-item,
+  .splash-screen {
+    transition: none !important;
+  }
+}
+
+/* ========================================
+   第四阶段：CEO 私人驾驶舱 App 首页
+   以一个视觉中心和横向信息流替代后台式网格
+======================================== */
+
+body {
+  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 38px);
+}
+
+.app-main {
+  margin: 0 auto;
+}
+
+.app-header {
+  margin: 0 auto;
+  padding-bottom: 18px;
+}
+
+.header-context {
+  margin-top: 28px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.welcome-text {
+  color: #d8dae0;
+  font-size: 18px;
+  font-weight: 590;
+  letter-spacing: -0.015em;
+}
+
+.header-status-line {
+  align-items: center;
+  color: var(--text-tertiary);
+  display: flex;
+  font-size: 11px;
+  gap: 7px;
+  margin-top: 18px;
+}
+
+.header-status-dot {
+  background: var(--success);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(84, 215, 123, 0.55);
+  height: 6px;
+  width: 6px;
+}
+
+.header-status-label::after {
+  color: #545760;
+  content: '·';
+  margin-left: 7px;
+}
+
+.header-status-line strong {
+  color: #bfc2ca;
+  font-weight: 580;
+}
+
+.section {
+  margin-bottom: 42px;
+}
+
+.hero-status-section {
+  margin-bottom: 46px;
+}
+
+.section-header {
+  margin-bottom: 17px;
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 670;
+}
+
+.section-subtitle {
+  margin-top: 6px;
+}
+
+/* 首屏唯一视觉中心 */
+.operating-panel {
+  background: none;
+  border: 0;
+  display: block;
+  overflow: visible;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.command-status-card {
+  background:
+    radial-gradient(circle at 78% 10%, rgba(92, 174, 255, 0.12), transparent 36%),
+    linear-gradient(145deg, rgba(26, 28, 35, 0.9), rgba(13, 14, 19, 0.94));
+  border: 1px solid var(--line-strong);
+  border-radius: 24px;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  position: relative;
+  backdrop-filter: blur(26px) saturate(125%);
+  -webkit-backdrop-filter: blur(26px) saturate(125%);
+}
+
+.command-status-card::before {
+  background: linear-gradient(105deg, rgba(255, 255, 255, 0.11), transparent 30%);
+  content: '';
+  height: 1px;
+  left: 24px;
+  position: absolute;
+  right: 24px;
+  top: 0;
+}
+
+.command-status-hero {
+  align-items: center;
+  display: flex;
+  gap: 21px;
+  min-height: 170px;
+  padding: 25px 22px 21px;
+}
+
+.status-orbit {
+  align-items: center;
+  background: radial-gradient(circle, rgba(84, 215, 123, 0.16), rgba(84, 215, 123, 0.025) 56%, transparent 58%);
+  display: flex;
+  flex: 0 0 92px;
+  height: 92px;
+  justify-content: center;
+  position: relative;
+}
+
+.status-orbit-ring {
+  border: 1px solid rgba(125, 224, 157, 0.28);
+  border-left-color: rgba(92, 174, 255, 0.52);
+  border-radius: 50%;
+  inset: 7px;
+  position: absolute;
+  transform: rotate(-28deg);
+}
+
+.status-orbit-ring::after {
+  background: var(--success);
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(84, 215, 123, 0.75);
+  content: '';
+  height: 7px;
+  position: absolute;
+  right: 8px;
+  top: 10px;
+  width: 7px;
+}
+
+.status-orbit-core {
+  background: rgba(84, 215, 123, 0.92);
+  border: 7px solid rgba(84, 215, 123, 0.1);
+  background-clip: padding-box;
+  border-radius: 50%;
+  box-shadow: 0 0 22px rgba(84, 215, 123, 0.35);
+  height: 28px;
+  width: 28px;
+}
+
+.command-status-copy {
+  min-width: 0;
+}
+
+.command-status-eyebrow {
+  color: #777b86;
+  display: block;
+  font-size: 9px;
+  font-weight: 680;
+  letter-spacing: 0.14em;
+}
+
+.command-status-copy strong {
+  color: var(--text-primary);
+  display: block;
+  font-size: 24px;
+  font-weight: 680;
+  letter-spacing: -0.035em;
+  line-height: 1.18;
+  margin-top: 9px;
+}
+
+.command-status-copy > span:last-child {
+  color: var(--text-tertiary);
+  display: block;
+  font-size: 11px;
+  line-height: 1.45;
+  margin-top: 7px;
+}
+
+.command-status-list {
+  border-top: 1px solid var(--line);
+  padding: 0 20px;
+}
+
+.command-status-row {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 76px 1fr 8px;
+  min-height: 58px;
+}
+
+.command-status-row + .command-status-row {
+  border-top: 1px solid var(--line);
+}
+
+.command-status-row > span {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.command-status-row strong {
+  color: #d8dae0;
+  font-size: 13px;
+  font-weight: 580;
+  text-align: right;
+}
+
+.status-indicator {
+  border-radius: 50%;
+  height: 6px;
+  width: 6px;
+}
+
+.status-indicator.healthy { background: var(--success); }
+.status-indicator.watch { background: var(--warning); }
+.status-indicator.active { background: var(--accent); }
+
+/* 快捷控制：单手横向信息流 */
+.quick-grid,
+.executive-board,
+.market-carousel {
+  display: flex;
+  gap: 11px;
+  grid-template-columns: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 1px 2px 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.quick-btn {
+  flex: 0 0 154px;
+  grid-column: auto;
+  min-height: 154px;
+  padding: 16px;
+  scroll-snap-align: start;
+}
+
+.quick-btn[data-action="tesla"] {
+  align-items: start;
+  flex-basis: 220px;
+  grid-column: auto;
+  grid-template-columns: 1fr auto;
+  min-height: 154px;
+}
+
+.quick-btn[data-action="tesla"] .quick-icon {
+  grid-column: 1 / -1;
+}
+
+.quick-btn[data-action="tesla"] .quick-copy {
+  align-self: end;
+  grid-column: 1;
+}
+
+.quick-icon {
+  height: 42px;
+  width: 42px;
+}
+
+.quick-copy {
+  align-self: end;
+}
+
+.quick-arrow {
+  align-self: end;
+}
+
+/* 行情：一张主卡 + 次级横滑卡 */
+.futures-grid {
+  display: block;
+}
+
+.market-featured {
+  background:
+    radial-gradient(circle at 88% 0%, rgba(84, 215, 123, 0.09), transparent 30%),
+    linear-gradient(150deg, rgba(23, 26, 32, 0.97), rgba(13, 14, 18, 0.99));
+  border-radius: 24px;
+  min-height: 326px;
+  padding: 22px;
+}
+
+.market-featured-head,
+.market-featured-quote {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+}
+
+.market-featured-code {
+  color: var(--text-primary);
+  display: block;
+  font-size: 16px;
+  font-weight: 680;
+  letter-spacing: 0.02em;
+}
+
+.market-featured-head .future-name {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  margin-top: 5px;
+}
+
+.market-live {
+  align-items: center;
+  color: #777b85;
+  display: flex;
+  font-size: 9px;
+  font-weight: 650;
+  gap: 6px;
+  letter-spacing: 0.1em;
+}
+
+.market-live i {
+  background: var(--success);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(84, 215, 123, 0.55);
+  height: 5px;
+  width: 5px;
+}
+
+.market-featured-quote {
+  align-items: flex-end;
+  margin-top: 31px;
+}
+
+.market-featured .future-price {
+  font-size: 52px;
+  font-weight: 670;
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+}
+
+.market-featured .future-change {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 620;
+  gap: 5px;
+}
+
+.market-position-summary {
+  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 28px;
+  padding: 17px 0;
+}
+
+.market-position-summary > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.market-position-summary > div + div {
+  border-left: 1px solid var(--line);
+  padding-left: 15px;
+}
+
+.market-position-summary span,
+.market-strategy span {
+  color: var(--text-tertiary);
+  font-size: 10px;
+}
+
+.market-position-summary strong {
+  color: #d9dbe0;
+  font-size: 12px;
+  font-weight: 610;
+  margin-top: 7px;
+}
+
+.market-position-summary .risk-normal { color: var(--success); }
+.market-position-summary .risk-alert { color: var(--danger); }
+
+.market-strategy {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 17px;
+}
+
+.market-strategy strong {
+  color: #b9bcc4;
+  font-size: 11px;
+  font-weight: 560;
+}
+
+.market-carousel {
+  margin-top: 12px;
+}
+
+.market-mini {
+  flex: 0 0 176px;
+  min-height: 150px;
+  padding: 16px;
+  scroll-snap-align: start;
+}
+
+.market-mini-head {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+}
+
+.market-mini-price {
+  color: var(--text-primary);
+  display: block;
+  font-size: 25px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 660;
+  letter-spacing: -0.035em;
+  margin-top: 21px;
+}
+
+.market-mini-change {
+  display: flex;
+  font-size: 11px;
+  gap: 7px;
+  margin-top: 8px;
+}
+
+/* 项目：大幅 App 卡片 */
+.project-list {
+  display: grid;
+  gap: 13px;
+}
+
+.project-card {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(92, 174, 255, 0.08), transparent 34%),
+    var(--surface-solid);
+  border-radius: 22px;
+  min-height: 246px;
+  padding: 21px;
+}
+
+.project-card-head {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+}
+
+.project-kicker {
+  color: #70737d;
+  font-size: 9px;
+  font-weight: 680;
+  letter-spacing: 0.13em;
+}
+
+.project-name {
+  font-size: 22px;
+  font-weight: 670;
+  letter-spacing: -0.025em;
+  margin-top: 9px;
+}
+
+.project-live-state {
+  background: rgba(84, 215, 123, 0.1);
+  border-radius: 999px;
+  color: #77df94;
+  font-size: 10px;
+  font-weight: 640;
+  padding: 7px 10px;
+}
+
+.project-details {
+  display: grid;
+  gap: 12px;
+  margin-top: 27px;
+}
+
+.project-details > div {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.project-details span {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.project-details strong {
+  color: #d5d7dc;
+  font-size: 13px;
+  font-weight: 580;
+}
+
+.project-progress {
+  background: rgba(255, 255, 255, 0.065);
+  border-radius: 999px;
+  height: 3px;
+  margin-top: 22px;
+  overflow: hidden;
+}
+
+.project-progress span {
+  background: linear-gradient(90deg, #477cac, var(--accent));
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+}
+
+.project-card .btn-detail {
+  align-items: center;
+  background: none;
+  color: #aeb2bc;
+  display: flex;
+  font-size: 12px;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding: 7px 0 0;
+  width: 100%;
+}
+
+/* 企业资料中心：一个资料空间，不使用文件夹宫格 */
+.file-grid {
+  display: block;
+}
+
+.document-center {
+  background: linear-gradient(145deg, rgba(25, 27, 33, 0.94), rgba(13, 14, 18, 0.98));
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.document-overview {
+  align-items: center;
+  display: grid;
+  gap: 13px;
+  grid-template-columns: 42px 1fr auto;
+  min-height: 96px;
+  padding: 18px;
+}
+
+.document-center-mark {
+  align-items: center;
+  background: rgba(189, 156, 97, 0.12);
+  border-radius: 13px;
+  color: #d4b57b;
+  display: flex;
+  font-size: 21px;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+
+.document-overview > div:nth-child(2) span {
+  color: var(--text-tertiary);
+  display: block;
+  font-size: 10px;
+}
+
+.document-overview > div:nth-child(2) strong {
+  color: var(--text-primary);
+  display: block;
+  font-size: 15px;
+  font-weight: 620;
+  margin-top: 6px;
+}
+
+.document-count {
+  color: #898c96;
+  font-size: 10px;
+}
+
+.document-category-list {
+  border-top: 1px solid var(--line);
+}
+
+.document-category-list .file-item {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 30px 1fr auto;
+  min-height: 58px;
+  padding: 9px 18px;
+}
+
+.document-category-list .file-item + .file-item {
+  border-top: 1px solid var(--line);
+}
+
+.document-category-list .file-icon {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.055);
+  border-radius: 9px;
+  color: #b7bac2;
+  display: flex;
+  font-size: 12px;
+  font-weight: 680;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
+}
+
+.document-category-list .file-name {
+  color: #d8dae0;
+  font-size: 13px;
+  text-align: left;
+}
+
+.file-arrow {
+  color: #686b74;
+  font-size: 21px;
+}
+
+/* 次级信息继续保留，但弱化后台网格感 */
+.position-list {
+  display: flex;
+  gap: 11px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.position-card {
+  flex: 0 0 270px;
+  scroll-snap-align: start;
+}
+
+.executive-board {
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.resource-card {
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  flex: 0 0 168px;
+  min-height: 142px;
+  padding: 16px;
+  scroll-snap-align: start;
+}
+
+.resource-card-top {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.resource-icon {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.055);
+  border-radius: 10px;
+  color: #b8bbc3;
+  display: flex;
+  font-size: 11px;
+  font-weight: 680;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.resource-card .resource-name {
+  display: block;
+  margin-top: 22px;
+}
+
+.resource-card .resource-value {
+  display: block;
+  font-size: 14px;
+  margin-top: 7px;
+}
+
+.quick-grid,
+.market-carousel,
+.position-list,
+.executive-board {
+  scrollbar-width: none;
+}
+
+.quick-grid::-webkit-scrollbar,
+.market-carousel::-webkit-scrollbar,
+.position-list::-webkit-scrollbar,
+.executive-board::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 430px) {
+  .app-header {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .section {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@media (max-width: 365px) {
+  .command-status-hero {
+    gap: 15px;
+    padding-left: 17px;
+    padding-right: 17px;
+  }
+
+  .status-orbit {
+    flex-basis: 78px;
+    height: 78px;
+  }
+
+  .command-status-copy strong {
+    font-size: 21px;
+  }
+
+  .market-featured .future-price {
+    font-size: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-orbit-ring,
+  .command-status-card,
+  .market-featured {
+    animation: none !important;
+  }
+}
+
+/* ========================================
+   第五阶段：五页 App Tab 架构
+   仅作用于新增页面，首页视觉保持不变
+======================================== */
+
+.app-view[hidden] {
+  display: none !important;
+}
+
+.secondary-view {
+  margin: 0 auto;
+  min-height: 100svh;
+  padding-bottom: 12px;
+  width: min(100%, 720px);
+}
+
+.secondary-view.is-active {
+  animation: app-view-enter 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes app-view-enter {
+  from {
+    opacity: 0.72;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.view-header {
+  padding: max(30px, calc(env(safe-area-inset-top) + 14px)) 20px 24px;
+}
+
+.view-title {
+  color: var(--text-primary);
+  font-size: 34px;
+  font-weight: 720;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+
+.view-subtitle {
+  color: var(--text-tertiary);
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.view-main {
+  padding: 0 16px;
+}
+
+.view-section {
+  margin-bottom: 38px;
+}
+
+.view-section-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.view-section-title {
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.mock-data-label {
+  background: rgba(255, 255, 255, 0.055);
+  border-radius: 999px;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  padding: 6px 9px;
+}
+
+.page-muted-label {
+  color: var(--text-tertiary);
+  display: block;
+  font-size: 11px;
+}
+
+.page-row-arrow {
+  color: #666973;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.page-action {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+.page-action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.page-action:active {
+  transform: scale(0.985);
+}
+
+/* 项目页 */
+.page-project-list {
+  display: grid;
+  gap: 13px;
+}
+
+.page-project-card {
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 19px;
+}
+
+.page-project-heading,
+.page-project-next,
+.page-progress-copy,
+.page-project-action {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.page-project-heading {
+  align-items: flex-start;
+}
+
+.page-project-heading h3 {
+  color: var(--text-primary);
+  font-size: 19px;
+  font-weight: 660;
+  letter-spacing: -0.02em;
+}
+
+.page-project-heading > div > span {
+  color: var(--text-tertiary);
+  display: block;
+  font-size: 11px;
+  margin-top: 7px;
+}
+
+.page-state-badge {
+  background: rgba(84, 215, 123, 0.1);
+  border-radius: 999px;
+  color: #77df94;
+  font-size: 10px;
+  padding: 7px 10px;
+}
+
+.page-project-next {
+  border-top: 1px solid var(--line);
+  margin-top: 20px;
+  padding-top: 17px;
+}
+
+.page-project-next span,
+.page-progress-copy span {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.page-project-next strong,
+.page-progress-copy strong {
+  color: #d9dbe0;
+  font-size: 12px;
+  font-weight: 580;
+}
+
+.page-progress-copy {
+  margin-top: 17px;
+}
+
+.page-progress-track {
+  background: rgba(255, 255, 255, 0.065);
+  border-radius: 999px;
+  height: 3px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.page-progress-track span {
+  background: var(--accent);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+}
+
+.page-project-action {
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  color: #afb2bb;
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 18px;
+  padding: 13px 0 0;
+  width: 100%;
+}
+
+/* 文件页 */
+.page-file-library {
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.file-page-summary {
+  align-items: flex-end;
+  display: flex;
+  justify-content: space-between;
+  min-height: 98px;
+  padding: 18px;
+}
+
+.file-page-summary strong {
+  color: var(--text-primary);
+  display: block;
+  font-size: 19px;
+  font-weight: 650;
+  margin-top: 7px;
+}
+
+.file-page-summary > span {
+  color: var(--text-tertiary);
+  font-size: 10px;
+}
+
+.file-page-list {
+  border-top: 1px solid var(--line);
+}
+
+.page-file-row {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 38px 1fr 14px;
+  padding: 13px 16px;
+  text-align: left;
+  transition: background-color 180ms ease-out, transform 180ms ease-out;
+  width: 100%;
+}
+
+.page-file-row + .page-file-row {
+  border-top: 1px solid var(--line);
+}
+
+.page-file-symbol,
+.settings-symbol {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.055);
+  border-radius: 10px;
+  color: #b9bcc5;
+  display: flex;
+  font-size: 12px;
+  font-weight: 680;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
+}
+
+.page-file-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.page-file-copy strong {
+  color: #dcdee3;
+  font-size: 13px;
+  font-weight: 590;
+}
+
+.page-file-copy span {
+  color: var(--text-tertiary);
+  font-size: 10px;
+  margin-top: 5px;
+}
+
+/* 我的页 */
+.profile-panel {
+  align-items: center;
+  background: linear-gradient(145deg, rgba(24, 27, 33, 0.96), rgba(14, 15, 19, 0.98));
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  display: grid;
+  gap: 13px;
+  grid-template-columns: 50px 1fr auto;
+  min-height: 108px;
+  padding: 18px;
+}
+
+.profile-avatar {
+  align-items: center;
+  background: rgba(92, 174, 255, 0.13);
+  border-radius: 15px;
+  color: #9fcbff;
+  display: flex;
+  font-size: 20px;
+  font-weight: 680;
+  height: 50px;
+  justify-content: center;
+  width: 50px;
+}
+
+.profile-copy {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-copy strong {
+  color: var(--text-primary);
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.profile-copy span {
+  color: var(--text-tertiary);
+  font-size: 10px;
+  margin-top: 6px;
+}
+
+.profile-status {
+  align-items: center;
+  color: #89dca0;
+  display: flex;
+  font-size: 9px;
+  gap: 5px;
+}
+
+.profile-status i {
+  background: var(--success);
+  border-radius: 50%;
+  height: 5px;
+  width: 5px;
+}
+
+.settings-list {
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  margin-top: 14px;
+  overflow: hidden;
+}
+
+.settings-row {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 11px;
+  grid-template-columns: 38px 1fr auto 14px;
+  padding: 11px 15px;
+  text-align: left;
+  transition: background-color 180ms ease-out, transform 180ms ease-out;
+  width: 100%;
+}
+
+.settings-row + .settings-row {
+  border-top: 1px solid var(--line);
+}
+
+.settings-name {
+  color: #d9dbe0;
+  font-size: 13px;
+}
+
+.settings-value {
+  color: var(--text-tertiary);
+  font-size: 10px;
+}
+
+@media (hover: hover) {
+  .page-file-row:hover,
+  .settings-row:hover {
+    background: rgba(255, 255, 255, 0.035);
+  }
+}
+
+@media (max-width: 365px) {
+  .view-title {
+    font-size: 31px;
+  }
+
+  .profile-panel {
+    grid-template-columns: 46px 1fr;
+  }
+
+  .profile-status {
+    grid-column: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .secondary-view.is-active {
+    animation: none;
+  }
+
+  .page-action {
+    transition: none !important;
+  }
+}
+
+/* 外部行情入口：不进入内部行情页 */
+.market-entry-backdrop {
+  align-items: flex-end;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 16px 16px calc(env(safe-area-inset-bottom) + 16px);
+  position: fixed;
+  z-index: var(--z-toast);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.market-entry-sheet {
+  background: linear-gradient(145deg, rgba(29, 31, 38, 0.98), rgba(14, 15, 19, 0.99));
+  border: 1px solid var(--line-strong);
+  border-radius: 18px;
+  max-width: 520px;
+  padding: 13px 19px 17px;
+  text-align: center;
+  width: 100%;
+}
+
+.market-entry-handle {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  height: 4px;
+  margin: 0 auto 17px;
+  width: 38px;
+}
+
+.market-entry-symbol {
+  align-items: center;
+  background: rgba(92, 174, 255, 0.12);
+  border-radius: 13px;
+  color: #9fcbff;
+  display: inline-flex;
+  font-size: 22px;
+  height: 46px;
+  justify-content: center;
+  width: 46px;
+}
+
+.market-entry-sheet h2 {
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 650;
+  line-height: 1.35;
+  margin-top: 14px;
+}
+
+.market-entry-sheet p {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 9px auto 18px;
+  max-width: 290px;
+}
+
+.market-entry-download,
+.market-entry-dismiss {
+  align-items: center;
+  border-radius: 12px;
+  display: flex;
+  font-size: 13px;
+  justify-content: center;
+  min-height: 44px;
+  text-decoration: none;
+  width: 100%;
+}
+
+.market-entry-download {
+  background: var(--accent);
+  color: #07111e;
+  font-weight: 650;
+}
+
+.market-entry-dismiss {
+  background: transparent;
+  border: 0;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.market-entry-download:active,
+.market-entry-dismiss:active {
+  transform: scale(0.985);
+}
+
+.market-entry-download:focus-visible,
+.market-entry-dismiss:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Tesla 快速控制入口：两辆车，两张 iOS 风格车辆卡 */
+.tesla-vehicle-card {
+  align-items: flex-start;
+  flex: 0 0 188px;
+  grid-template-columns: 1fr auto;
+  min-height: 154px;
+  padding: 15px;
+}
+
+.tesla-vehicle-card .tesla-vehicle-mark {
+  align-items: center;
+  border-radius: 14px;
+  display: flex;
+  font-size: 28px;
+  font-weight: 720;
+  height: 58px;
+  justify-content: center;
+  letter-spacing: -0.06em;
+  width: 58px;
+}
+
+.tesla-model-x {
+  background: linear-gradient(145deg, #f4f5f7, #c9cbd0);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.tesla-model-x .tesla-vehicle-mark {
+  background: rgba(12, 13, 17, 0.1);
+  color: #24262c;
+}
+
+.tesla-model-x .label {
+  color: #24262c;
+}
+
+.tesla-model-x .quick-meta {
+  color: #555962;
+}
+
+.tesla-model-x .quick-meta i {
+  background: var(--accent);
+}
+
+.tesla-model-3 {
+  background: linear-gradient(145deg, #20232a, #0c0d11);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.tesla-model-3 .tesla-vehicle-mark {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f2f4;
+}
+
+.tesla-model-3 .label {
+  color: #f1f2f4;
+}
+
+.tesla-model-3 .quick-meta {
+  color: #a3a6af;
+}
+
+.tesla-model-3 .quick-meta i {
+  background: var(--accent);
+}
+
+.tesla-vehicle-card .quick-copy {
+  align-self: end;
+  grid-column: 1;
+  margin-top: 18px;
+}
+
+.tesla-vehicle-card .quick-meta {
+  align-items: center;
+  display: flex;
+  gap: 5px;
+}
+
+.tesla-vehicle-card .quick-meta i {
+  border-radius: 50%;
+  display: inline-block;
+  height: 5px;
+  width: 5px;
+}
+
+.tesla-vehicle-card .quick-arrow {
+  align-self: end;
+  color: inherit;
+}
+
+/* Tesla 控制页 */
+.tesla-control-view {
+  margin: 0 auto;
+  min-height: 100svh;
+  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 24px);
+  width: min(100%, 720px);
+}
+
+.tesla-control-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  padding: max(24px, calc(env(safe-area-inset-top) + 10px)) 20px 18px;
+}
+
+.tesla-back-button {
+  background: transparent;
+  border: 0;
+  color: #b6bac4;
+  cursor: pointer;
+  font-size: 14px;
+  min-height: 44px;
+  padding: 8px 8px 8px 0;
+}
+
+.tesla-back-button span {
+  font-size: 27px;
+  line-height: 0;
+  margin-right: 4px;
+  vertical-align: -2px;
+}
+
+.tesla-header-status {
+  align-items: center;
+  color: var(--text-tertiary);
+  display: flex;
+  font-size: 10px;
+  gap: 6px;
+}
+
+.tesla-header-status i {
+  background: var(--accent);
+  border-radius: 50%;
+  height: 5px;
+  width: 5px;
+}
+
+.tesla-control-main {
+  padding: 0 16px;
+}
+
+.tesla-control-hero {
+  align-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 18px;
+  display: grid;
+  gap: 15px;
+  grid-template-columns: 64px 1fr auto;
+  min-height: 142px;
+  padding: 20px;
+}
+
+.tesla-control-hero.white {
+  background: linear-gradient(145deg, rgba(245, 246, 248, 0.96), rgba(195, 198, 204, 0.9));
+  color: #1d1f24;
+}
+
+.tesla-control-hero.black {
+  background: linear-gradient(145deg, rgba(31, 34, 41, 0.98), rgba(11, 12, 16, 0.99));
+  color: var(--text-primary);
+}
+
+.tesla-control-vehicle-mark {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  display: flex;
+  font-size: 31px;
+  font-weight: 720;
+  height: 64px;
+  justify-content: center;
+  letter-spacing: -0.06em;
+  width: 64px;
+}
+
+.tesla-control-hero.black .tesla-control-vehicle-mark {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tesla-control-vehicle-copy {
+  min-width: 0;
+}
+
+.tesla-control-kicker {
+  color: currentColor;
+  display: block;
+  font-size: 9px;
+  font-weight: 680;
+  letter-spacing: 0.13em;
+  opacity: 0.55;
+}
+
+.tesla-control-vehicle-copy h1 {
+  color: currentColor;
+  font-size: 20px;
+  font-weight: 680;
+  letter-spacing: -0.025em;
+  margin-top: 8px;
+}
+
+.tesla-control-vehicle-copy > span:last-child {
+  color: currentColor;
+  display: block;
+  font-size: 10px;
+  margin-top: 6px;
+  opacity: 0.62;
+}
+
+.tesla-online-badge {
+  align-items: center;
+  color: currentColor;
+  display: flex;
+  font-size: 10px;
+  gap: 5px;
+  opacity: 0.72;
+}
+
+.tesla-online-badge i {
+  background: var(--success);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(84, 215, 123, 0.55);
+  height: 5px;
+  width: 5px;
+}
+
+.tesla-control-details {
+  margin-top: 28px;
+}
+
+.tesla-control-details summary {
+  align-items: center;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  font-size: 19px;
+  font-weight: 650;
+  justify-content: space-between;
+  list-style: none;
+  min-height: 44px;
+}
+
+.tesla-control-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.tesla-summary-hint {
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.tesla-summary-hint b {
+  display: inline-block;
+  font-size: 17px;
+  font-weight: 400;
+  margin-left: 4px;
+  transform: rotate(0deg);
+  transition: transform 180ms ease-out;
+}
+
+.tesla-control-details:not([open]) .tesla-summary-hint b {
+  transform: rotate(-90deg);
+}
+
+.tesla-command-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 14px;
+}
+
+.tesla-command-button {
+  align-items: flex-start;
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  min-height: 118px;
+  padding: 15px;
+  position: relative;
+  text-align: left;
+  transition: background-color 180ms ease-out, border-color 180ms ease-out, transform 180ms ease-out;
+}
+
+.tesla-command-button:nth-last-child(1):nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.tesla-command-button:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.tesla-command-button:active {
+  transform: scale(0.975);
+}
+
+.tesla-command-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.tesla-command-icon {
+  align-items: center;
+  background: rgba(92, 174, 255, 0.1);
+  border-radius: 11px;
+  color: #9fcbff;
+  display: flex;
+  font-size: 21px;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.tesla-command-label {
+  color: #e7e9ee;
+  font-size: 13px;
+  font-weight: 590;
+  margin-top: 16px;
+}
+
+.tesla-command-state {
+  color: var(--text-tertiary);
+  font-size: 9px;
+  margin-top: 5px;
+}
+
+.tesla-command-button.is-sending .tesla-command-icon {
+  animation: tesla-command-pulse 760ms ease-in-out infinite;
+}
+
+.tesla-command-button.is-complete {
+  border-color: rgba(84, 215, 123, 0.35);
+}
+
+.tesla-command-button.is-complete .tesla-command-icon {
+  background: rgba(84, 215, 123, 0.13);
+  color: var(--success);
+}
+
+@keyframes tesla-command-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.tesla-feedback {
+  align-items: center;
+  color: var(--text-tertiary);
+  display: flex;
+  font-size: 12px;
+  gap: 8px;
+  justify-content: center;
+  min-height: 52px;
+  padding: 10px;
+  text-align: center;
+}
+
+.tesla-feedback.is-sending {
+  color: #a9cfff;
+}
+
+.tesla-feedback.is-complete {
+  color: #84e29e;
+}
+
+.tesla-feedback.is-error {
+  color: #ff9b98;
+}
+
+.tesla-feedback-spinner {
+  animation: tesla-spinner 760ms linear infinite;
+  border: 2px solid rgba(159, 203, 255, 0.25);
+  border-radius: 50%;
+  border-top-color: var(--accent);
+  height: 13px;
+  width: 13px;
+}
+
+@keyframes tesla-spinner {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 365px) {
+  .tesla-vehicle-card {
+    flex-basis: 174px;
+  }
+
+  .tesla-control-hero {
+    gap: 11px;
+    grid-template-columns: 54px 1fr;
+    padding: 16px;
+  }
+
+  .tesla-control-vehicle-mark {
+    height: 54px;
+    width: 54px;
+  }
+
+  .tesla-online-badge {
+    grid-column: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tesla-summary-hint b,
+  .tesla-command-button,
+  .tesla-command-button.is-sending .tesla-command-icon,
+  .tesla-feedback-spinner {
+    animation: none !important;
+    transition: none !important;
+  }
+}

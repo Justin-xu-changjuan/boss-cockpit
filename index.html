@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  
+  <!-- iOS 添加到主屏幕核心配置 -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="老板驾驶舱" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#050507" />
+  <meta name="format-detection" content="telephone=no" />
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/app-icon-180.png" />
+  
+  <title>老板驾驶舱</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ========== App 启动层 ========== -->
+  <div class="splash-screen" id="splash-screen" aria-hidden="true">
+    <div class="splash-mark" aria-hidden="true">
+      <span class="splash-mark-ring splash-mark-ring-outer"></span>
+      <span class="splash-mark-ring splash-mark-ring-inner"></span>
+      <span class="splash-mark-light"></span>
+    </div>
+    <div class="splash-title">老板驾驶舱</div>
+    <div class="splash-subtitle">CEO CONTROL CENTER</div>
+  </div>
+
+  <div class="app-view is-active" id="view-home" data-view="home">
+  <!-- ========== 顶部区域 ========== -->
+  <header class="app-header">
+    <div class="header-brand-row">
+      <div class="header-brand-copy">
+        <h1 class="app-title">老板驾驶舱</h1>
+        <div class="app-subtitle">EXECUTIVE COMMAND CENTER</div>
+      </div>
+      <div class="command-mark" aria-hidden="true">
+        <span class="command-mark-ring"></span>
+        <span class="command-mark-light"></span>
+      </div>
+    </div>
+    <div class="header-context">
+      <div class="welcome-text" id="welcome-text">欢迎回来</div>
+      <div class="header-datetime">
+        <time class="header-time" id="header-time">--:--</time>
+        <div class="header-date" id="header-date">加载中...</div>
+      </div>
+    </div>
+    <div class="header-status-line" aria-label="今日状态：企业运行正常">
+      <span class="header-status-dot" aria-hidden="true"></span>
+      <span class="header-status-label">今日状态</span>
+      <strong>企业运行正常</strong>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <!-- ========== 首屏：核心状态 ========== -->
+    <section class="section hero-status-section" aria-label="核心经营状态">
+      <div class="operating-panel" id="operating-status-grid">
+        <!-- 由 JS 渲染 -->
+      </div>
+    </section>
+
+    <!-- ========== 快捷控制 ========== -->
+    <section class="section quick-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">快捷控制</h2>
+          <p class="section-subtitle">常用能力，轻触即达</p>
+        </div>
+      </div>
+      <div class="quick-grid" id="quick-grid">
+        <!-- 由 JS 渲染 -->
+      </div>
+    </section>
+
+    <!-- ========== 核心行情 ========== -->
+    <section class="section market-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">投资与行情</h2>
+          <p class="section-subtitle">核心持仓与市场脉搏</p>
+        </div>
+        <button class="section-action" onclick="refreshFutures()">刷新</button>
+      </div>
+      <div class="futures-grid" id="futures-grid">
+        <!-- 由 JS 渲染 -->
+      </div>
+    </section>
+
+    <!-- ========== 重点项目 ========== -->
+    <section class="section project-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">重点项目</h2>
+          <p class="section-subtitle">当前最重要的推进事项</p>
+        </div>
+      </div>
+      <div class="project-list" id="project-list">
+        <!-- 由 JS 渲染 -->
+      </div>
+    </section>
+
+    <!-- ========== 企业资料中心 ========== -->
+    <section class="section file-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">企业资料中心</h2>
+          <p class="section-subtitle">重要资料与最近访问</p>
+        </div>
+      </div>
+      <div class="file-grid" id="file-grid">
+        <!-- 由 JS 渲染 -->
+      </div>
+    </section>
+
+    <!-- ========== 今日行动 ========== -->
+    <section class="section focus-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">今日行动</h2>
+          <p class="section-subtitle">需要持续跟进的事项</p>
+        </div>
+        <button class="section-action" onclick="showToast('查看全部（预留）')">查看全部</button>
+      </div>
+      <div class="card focus-card">
+        <ul class="focus-list" id="focus-list">
+          <!-- 由 JS 渲染 -->
+        </ul>
+      </div>
+    </section>
+
+    <!-- ========== 投资持仓 ========== -->
+    <section class="section position-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">投资持仓</h2>
+          <p class="section-subtitle">成本、目标与风险边界</p>
+        </div>
+      </div>
+      <div class="position-list" id="position-list">
+        <!-- 由 JS 渲染 -->
+      </div>
+    </section>
+
+    <!-- ========== 资源概览 ========== -->
+    <section class="section executive-section">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">资源概览</h2>
+          <p class="section-subtitle">资产、电力与产业项目</p>
+        </div>
+      </div>
+      <div class="executive-board" id="executive-dashboard">
+        <!-- 由 JS 渲染 -->
+      </div>
+    </section>
+  </main>
+  </div>
+
+  <!-- ========== 项目页面 ========== -->
+  <section class="app-view secondary-view" id="view-project" data-view="project" hidden>
+    <header class="view-header">
+      <h1 class="view-title">项目</h1>
+      <p class="view-subtitle">核心项目与下一步行动</p>
+    </header>
+    <main class="view-main">
+      <section class="view-section" aria-labelledby="project-page-title">
+        <div class="view-section-heading">
+          <h2 class="view-section-title" id="project-page-title">进行中的项目</h2>
+          <span class="mock-data-label">模拟数据</span>
+        </div>
+        <div class="page-project-list" id="project-page-list"></div>
+      </section>
+    </main>
+  </section>
+
+  <!-- ========== 文件页面 ========== -->
+  <section class="app-view secondary-view" id="view-file" data-view="file" hidden>
+    <header class="view-header">
+      <h1 class="view-title">文件</h1>
+      <p class="view-subtitle">企业资料与最近访问</p>
+    </header>
+    <main class="view-main">
+      <section class="view-section" aria-labelledby="file-page-title">
+        <div class="view-section-heading">
+          <h2 class="view-section-title" id="file-page-title">资料分类</h2>
+          <span class="mock-data-label">模拟数据</span>
+        </div>
+        <div class="page-file-library" id="file-page-list"></div>
+      </section>
+    </main>
+  </section>
+
+  <!-- ========== 我的页面 ========== -->
+  <section class="app-view secondary-view" id="view-me" data-view="me" hidden>
+    <header class="view-header">
+      <h1 class="view-title">我的</h1>
+      <p class="view-subtitle">个人驾驶舱与系统状态</p>
+    </header>
+    <main class="view-main">
+      <section class="view-section" aria-label="个人信息">
+        <div class="profile-panel" id="profile-page-panel"></div>
+      </section>
+      <section class="view-section" aria-labelledby="settings-page-title">
+        <h2 class="view-section-title" id="settings-page-title">驾驶舱设置</h2>
+        <div class="settings-list" id="settings-page-list"></div>
+      </section>
+    </main>
+  </section>
+
+  <!-- ========== Tesla 控制页面 ========== -->
+  <section class="app-view tesla-control-view" id="view-tesla" data-view="tesla" hidden>
+    <header class="tesla-control-header">
+      <button class="tesla-back-button" type="button" data-tesla-back>
+        <span aria-hidden="true">‹</span> 首页
+      </button>
+      <span class="tesla-header-status"><i aria-hidden="true"></i>模拟控制</span>
+    </header>
+    <main class="tesla-control-main">
+      <div id="tesla-control-hero"></div>
+      <details class="tesla-control-details" open>
+        <summary>
+          <span>车辆控制</span>
+          <span class="tesla-summary-hint">下拉展开 <b aria-hidden="true">⌄</b></span>
+        </summary>
+        <div class="tesla-command-grid" id="tesla-command-grid"></div>
+      </details>
+      <div class="tesla-feedback" id="tesla-feedback" role="status" aria-live="polite"></div>
+    </main>
+  </section>
+
+  <!-- ========== 底部导航栏 ========== -->
+  <nav class="bottom-nav" aria-label="主导航">
+    <button class="nav-item active" type="button" data-page="home" aria-controls="view-home" aria-current="page">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">首页</span>
+    </button>
+    <button class="nav-item" type="button" data-page="market">
+      <span class="nav-icon">📈</span>
+      <span class="nav-label">行情</span>
+    </button>
+    <button class="nav-item" type="button" data-page="project" aria-controls="view-project">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">项目</span>
+    </button>
+    <button class="nav-item" type="button" data-page="file" aria-controls="view-file">
+      <span class="nav-icon">📂</span>
+      <span class="nav-label">文件</span>
+    </button>
+    <button class="nav-item" type="button" data-page="me" aria-controls="view-me">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">我的</span>
+    </button>
+  </nav>
+
+  <!-- 数据与逻辑 -->
+  <script src="data.js"></script>
+  <script src="futureData.js"></script>
+  <script src="pages.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
