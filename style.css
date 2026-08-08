@@ -1,0 +1,614 @@
+/* ========================================
+   老板驾驶舱 - Boss Cockpit
+   设计风格：Tesla App + iPhone 控制中心 + 高级企业App
+   深色、高级、简洁、圆角、大按钮、单手友好
+======================================== */
+
+:root {
+  /* 核心色彩 */
+  --bg-primary: #000000;
+  --bg-secondary: #0d0d0d;
+  --card-bg: #1c1c1e;
+  --card-bg-elevated: #2c2c2e;
+  --card-border: rgba(255, 255, 255, 0.08);
+  
+  /* 文字 */
+  --text-primary: #ffffff;
+  --text-secondary: #8e8e93;
+  --text-tertiary: #636366;
+  
+  /* 强调色 */
+  --accent: #0a84ff;
+  --accent-tesla: #e82127;
+  --success: #30d158;
+  --danger: #ff453a;
+  --warning: #ffd60a;
+  
+  /* 间距与圆角 */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --nav-height: 64px;
+  
+  /* 阴影与模糊 */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --blur: blur(20px);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 12px);
+}
+
+/* ========== 顶部区域 ========== */
+.app-header {
+  padding: 16px 20px 8px;
+  padding-top: max(16px, env(safe-area-inset-top));
+  background: linear-gradient(180deg, #111 0%, transparent 100%);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.app-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #fff 0%, #a0a0a0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-date {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.welcome-text {
+  font-size: 15px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* ========== 通用卡片 ========== */
+.section {
+  padding: 0 16px;
+  margin-bottom: 24px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+.section-action {
+  font-size: 14px;
+  color: var(--accent);
+  background: none;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.section-action:active {
+  background: rgba(10, 132, 255, 0.15);
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--card-border);
+  overflow: hidden;
+}
+
+/* ========== 模块1：快捷控制 ========== */
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.quick-btn {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 18px 8px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 92px;
+  position: relative;
+  overflow: hidden;
+}
+
+.quick-btn:active {
+  transform: scale(0.96);
+  background: var(--card-bg-elevated);
+}
+
+.quick-btn .icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.quick-btn .label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* Tesla 特殊强调 */
+.quick-btn.tesla {
+  background: linear-gradient(145deg, #1a1a1a 0%, #2a1010 100%);
+  border-color: rgba(232, 33, 39, 0.3);
+}
+
+.quick-btn.tesla .label {
+  color: #ff6b6b;
+}
+
+.quick-btn.tesla::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-tesla), transparent);
+  opacity: 0.7;
+}
+
+/* ========== 模块2：今日概览 ========== */
+.focus-list {
+  list-style: none;
+}
+
+.focus-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.15s;
+}
+
+.focus-item:last-child {
+  border-bottom: none;
+}
+
+.focus-item:active {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.focus-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.focus-dot.high {
+  background: var(--danger);
+  box-shadow: 0 0 8px rgba(255, 69, 58, 0.5);
+}
+
+.focus-dot.medium {
+  background: var(--warning);
+}
+
+.focus-text {
+  font-size: 15px;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+/* ========== 模块3：期货行情 ========== */
+.futures-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.future-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.future-card:active {
+  transform: scale(0.98);
+  background: var(--card-bg-elevated);
+}
+
+.future-name {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.future-code {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+.future-price {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.future-change {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.future-change.up {
+  color: var(--success);
+}
+
+.future-change.down {
+  color: var(--danger);
+}
+
+.trend-arrow {
+  font-size: 12px;
+}
+
+/* ========== 模块4：持仓观察 ========== */
+.position-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.position-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+
+.position-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.position-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.position-direction {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.position-direction.long {
+  background: rgba(48, 209, 88, 0.15);
+  color: var(--success);
+}
+
+.position-direction.short {
+  background: rgba(255, 69, 58, 0.15);
+  color: var(--danger);
+}
+
+.position-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+}
+
+.position-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.position-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.position-value {
+  font-size: 15px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.position-note {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* ========== 模块5：企业项目 ========== */
+.project-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.project-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.project-info {
+  flex: 1;
+}
+
+.project-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.project-status {
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.project-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.status-research::before {
+  background: var(--warning);
+}
+
+.status-organize::before {
+  background: var(--accent);
+}
+
+.btn-detail {
+  background: rgba(10, 132, 255, 0.12);
+  color: var(--accent);
+  border: none;
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.btn-detail:active {
+  background: rgba(10, 132, 255, 0.25);
+}
+
+/* ========== 模块6：文件入口 ========== */
+.file-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.file-item {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  color: inherit;
+}
+
+.file-item:active {
+  transform: scale(0.97);
+  background: var(--card-bg-elevated);
+}
+
+.file-icon {
+  font-size: 28px;
+}
+
+.file-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ========== 底部导航 ========== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(var(--nav-height) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: rgba(28, 28, 30, 0.85);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 100;
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 0;
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s;
+  height: 100%;
+}
+
+.nav-item.active {
+  color: var(--accent);
+}
+
+.nav-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.nav-label {
+  font-size: 10px;
+  letter-spacing: 0.2px;
+}
+
+/* ========== Toast 提示 ========== */
+.toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background: rgba(44, 44, 46, 0.95);
+  backdrop-filter: blur(20px);
+  color: white;
+  padding: 14px 24px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 500;
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  max-width: 80%;
+  text-align: center;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* ========== 加载状态 ========== */
+.loading {
+  text-align: center;
+  padding: 30px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* ========== 响应与细节优化 ========== */
+@media (max-width: 380px) {
+  .app-title {
+    font-size: 24px;
+  }
+  .future-price {
+    font-size: 20px;
+  }
+  .quick-btn {
+    min-height: 84px;
+    padding: 14px 6px 12px;
+  }
+  .quick-btn .icon {
+    font-size: 24px;
+  }
+}
+
+/* 防止长按菜单等 */
+img, a {
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* 滚动条隐藏（更像App） */
+::-webkit-scrollbar {
+  display: none;
+}
+body {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

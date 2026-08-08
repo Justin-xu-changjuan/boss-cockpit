@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  
+  <!-- iOS 添加到主屏幕核心配置 -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="老板驾驶舱" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="format-detection" content="telephone=no" />
+  
+  <!-- 可选：后续替换为真实图标 (180x180 推荐) -->
+  <!-- <link rel="apple-touch-icon" href="icon-180.png" /> -->
+  
+  <title>老板驾驶舱</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ========== 顶部区域 ========== -->
+  <header class="app-header">
+    <div class="header-top">
+      <h1 class="app-title">老板驾驶舱</h1>
+    </div>
+    <div class="header-date" id="header-date">加载中...</div>
+    <div class="welcome-text" id="welcome-text">欢迎回来</div>
+  </header>
+
+  <main>
+    <!-- ========== 模块1：快捷控制 ========== -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">快捷控制</h2>
+      </div>
+      <div class="quick-grid" id="quick-grid">
+        <!-- 由 JS 渲染 -->
+      </div>
+    </section>
+
+    <!-- ========== 模块2：今日概览 ========== -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">今日概览</h2>
+        <button class="section-action" onclick="showToast('查看全部（预留）')">查看全部</button>
+      </div>
+      <div class="card">
+        <ul class="focus-list" id="focus-list">
+          <!-- 由 JS 渲染 -->
+        </ul>
+      </div>
+    </section>
+
+    <!-- ========== 模块3：期货行情 ========== -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">期货行情</h2>
+        <button class="section-action" onclick="refreshFutures()">刷新</button>
+      </div>
+      <div class="futures-grid" id="futures-grid">
+        <!-- 由 JS 渲染 -->
+      </div>
+    </section>
+
+    <!-- ========== 模块4：持仓观察 ========== -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">持仓观察</h2>
+      </div>
+      <div class="position-list" id="position-list">
+        <!-- 由 JS 渲染 -->
+      </div>
+    </section>
+
+    <!-- ========== 模块5：企业项目 ========== -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">企业项目</h2>
+      </div>
+      <div class="project-list" id="project-list">
+        <!-- 由 JS 渲染 -->
+      </div>
+    </section>
+
+    <!-- ========== 模块6：文件入口 ========== -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">文件入口</h2>
+      </div>
+      <div class="file-grid" id="file-grid">
+        <!-- 由 JS 渲染 -->
+      </div>
+    </section>
+  </main>
+
+  <!-- ========== 底部导航栏 ========== -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-page="home">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">首页</span>
+    </button>
+    <button class="nav-item" data-page="market">
+      <span class="nav-icon">📈</span>
+      <span class="nav-label">行情</span>
+    </button>
+    <button class="nav-item" data-page="project">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">项目</span>
+    </button>
+    <button class="nav-item" data-page="file">
+      <span class="nav-icon">📂</span>
+      <span class="nav-label">文件</span>
+    </button>
+    <button class="nav-item" data-page="me">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">我的</span>
+    </button>
+  </nav>
+
+  <!-- 数据与逻辑 -->
+  <script src="data.js"></script>
+  <script src="futureData.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
