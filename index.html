@@ -13,6 +13,7 @@
   <meta name="format-detection" content="telephone=no" />
 
   <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/app-icon-192.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="icons/app-icon-180.png" />
   
   <title>老板驾驶舱</title>
@@ -58,13 +59,6 @@
   </header>
 
   <main class="app-main">
-    <!-- ========== 首屏：核心状态 ========== -->
-    <section class="section hero-status-section" aria-label="核心经营状态">
-      <div class="operating-panel" id="operating-status-grid">
-        <!-- 由 JS 渲染 -->
-      </div>
-    </section>
-
     <!-- ========== 账户总览 ========== -->
     <section class="section account-section" aria-labelledby="account-overview-title">
       <div class="section-header">
@@ -78,81 +72,26 @@
       </div>
     </section>
 
-    <!-- ========== 快捷控制 ========== -->
-    <section class="section quick-section">
+    <!-- ========== 行情关注预览 ========== -->
+    <section class="section market-section" aria-labelledby="home-market-title">
       <div class="section-header">
         <div>
-          <h2 class="section-title">快捷控制</h2>
-          <p class="section-subtitle">常用能力，轻触即达</p>
+          <h2 class="section-title" id="home-market-title">行情关注</h2>
+          <p class="section-subtitle">关注合约最新价格</p>
         </div>
+        <button class="section-action" type="button" data-market-watch aria-controls="view-market-watch">查看全部</button>
       </div>
-      <div class="quick-grid" id="quick-grid">
-        <!-- 由 JS 渲染 -->
-      </div>
-    </section>
-
-    <!-- ========== 核心行情 ========== -->
-    <section class="section market-section">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">投资与行情</h2>
-          <p class="section-subtitle">核心持仓与市场脉搏</p>
-        </div>
-        <button class="section-action" onclick="refreshFutures()">刷新</button>
-      </div>
-      <div class="futures-grid" id="futures-grid">
-        <!-- 由 JS 渲染 -->
-      </div>
-    </section>
-
-    <!-- ========== 重点项目 ========== -->
-    <section class="section project-section">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">重点项目</h2>
-          <p class="section-subtitle">当前最重要的推进事项</p>
-        </div>
-      </div>
-      <div class="project-list" id="project-list">
-        <!-- 由 JS 渲染 -->
-      </div>
-    </section>
-
-    <!-- ========== 企业资料中心 ========== -->
-    <section class="section file-section">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">企业资料中心</h2>
-          <p class="section-subtitle">重要资料与最近访问</p>
-        </div>
-      </div>
-      <div class="file-grid" id="file-grid">
-        <!-- 由 JS 渲染 -->
-      </div>
-    </section>
-
-    <!-- ========== 今日行动 ========== -->
-    <section class="section focus-section">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">今日行动</h2>
-          <p class="section-subtitle">需要持续跟进的事项</p>
-        </div>
-        <button class="section-action" onclick="showToast('查看全部（预留）')">查看全部</button>
-      </div>
-      <div class="card focus-card">
-        <ul class="focus-list" id="focus-list">
-          <!-- 由 JS 渲染 -->
-        </ul>
+      <div class="home-market-grid" id="home-futures-grid">
+        <!-- 由 JS 渲染，最多显示 4 条 -->
       </div>
     </section>
 
     <!-- ========== 期货持仓 ========== -->
-    <section class="section position-section">
+    <section class="section position-section" aria-labelledby="home-position-title">
       <div class="section-header">
         <div>
-          <h2 class="section-title">期货持仓</h2>
-          <p class="section-subtitle">价格、仓位与操作计划</p>
+          <h2 class="section-title" id="home-position-title">我的持仓</h2>
+          <p class="section-subtitle">当前持仓概览</p>
         </div>
       </div>
       <div class="position-list" id="position-list">
@@ -160,47 +99,81 @@
       </div>
     </section>
 
-    <!-- ========== 最近交易记录 ========== -->
-    <section class="section trade-log-section" aria-labelledby="trade-log-title">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title" id="trade-log-title">最近交易记录</h2>
-          <p class="section-subtitle">每一次操作，留下一条决策线索</p>
-        </div>
-      </div>
-      <div class="trade-log-list" id="trade-log-list">
-        <!-- 由 JS 渲染 -->
-      </div>
-    </section>
-
-    <!-- ========== 资源概览 ========== -->
-    <section class="section executive-section">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title">资源概览</h2>
-          <p class="section-subtitle">资产、电力与产业项目</p>
-        </div>
-      </div>
-      <div class="executive-board" id="executive-dashboard">
-        <!-- 由 JS 渲染 -->
-      </div>
-    </section>
   </main>
   </div>
 
-  <!-- ========== 项目页面 ========== -->
-  <section class="app-view secondary-view" id="view-project" data-view="project" hidden>
+  <!-- ========== 我的持仓页面 ========== -->
+  <section class="app-view secondary-view position-page-view" id="view-position" data-view="position" hidden>
     <header class="view-header">
-      <h1 class="view-title">项目</h1>
-      <p class="view-subtitle">核心项目与下一步行动</p>
+      <button class="view-back-button" type="button" data-position-back>返回首页</button>
+      <h1 class="view-title">我的持仓</h1>
+      <p class="view-subtitle">持仓数量、当前价格与浮盈</p>
     </header>
     <main class="view-main">
-      <section class="view-section" aria-labelledby="project-page-title">
+      <section class="view-section" aria-labelledby="position-page-title">
         <div class="view-section-heading">
-          <h2 class="view-section-title" id="project-page-title">进行中的项目</h2>
-          <span class="mock-data-label">模拟数据</span>
+          <h2 class="view-section-title" id="position-page-title">持仓明细</h2>
+          <button class="position-input-button" type="button" data-position-input-from-page>智能录入</button>
         </div>
-        <div class="page-project-list" id="project-page-list"></div>
+        <div class="position-list position-page-list" id="position-page-list"></div>
+      </section>
+    </main>
+  </section>
+
+  <!-- ========== 我的持仓智能录入页面 ========== -->
+  <section class="app-view secondary-view position-input-view" id="view-position-input" data-view="position-input" hidden>
+    <header class="view-header">
+      <button class="view-back-button" type="button" data-position-input-back>‹ 我的持仓</button>
+      <h1 class="view-title">持仓智能录入</h1>
+      <p class="view-subtitle">完整交易字段才会新增或更新持仓</p>
+    </header>
+    <main class="view-main">
+      <section class="view-section" aria-labelledby="position-input-title">
+        <div class="view-section-heading">
+          <h2 class="view-section-title" id="position-input-title">我的持仓数据</h2>
+          <span class="data-source-label">positions</span>
+        </div>
+        <div class="position-input-panel" id="position-input-panel"></div>
+      </section>
+    </main>
+  </section>
+
+  <!-- ========== 行情关注页面 ========== -->
+  <section class="app-view secondary-view market-watch-view" id="view-market-watch" data-view="market-watch" hidden>
+    <header class="view-header">
+      <button class="view-back-button" type="button" data-market-watch-back>返回首页</button>
+      <h1 class="view-title">行情关注</h1>
+      <p class="view-subtitle">所有关注合约的最新价格</p>
+    </header>
+    <main class="view-main">
+      <section class="view-section" aria-labelledby="market-watch-title">
+        <div class="view-section-heading">
+          <h2 class="view-section-title" id="market-watch-title">关注合约</h2>
+          <button class="market-watch-add-button" type="button" data-market-add-toggle aria-expanded="false" aria-controls="market-watch-add-form">添加关注合约</button>
+        </div>
+        <form class="market-watch-add-form" id="market-watch-add-form" hidden>
+          <p class="market-watch-form-help">保存后会加入行情关注。新合约尚未录入价格时显示“—”。</p>
+          <div class="market-watch-form-grid">
+            <label class="market-watch-field">
+              <span>合约代码</span>
+              <input name="code" type="text" maxlength="16" autocomplete="off" placeholder="例如 RB2610" required>
+            </label>
+            <label class="market-watch-field">
+              <span>合约名称</span>
+              <input name="name" type="text" maxlength="24" autocomplete="off" placeholder="例如 螺纹钢" required>
+            </label>
+            <label class="market-watch-field">
+              <span>单位</span>
+              <input name="unit" type="text" maxlength="16" autocomplete="off" placeholder="例如 元/吨" required>
+            </label>
+          </div>
+          <div class="market-watch-form-actions">
+            <button class="market-watch-save-button" type="submit">保存关注合约</button>
+            <button class="market-watch-cancel-button" type="button" data-market-add-cancel>取消</button>
+          </div>
+          <p class="market-watch-form-feedback" id="market-watch-form-feedback" role="status" aria-live="polite"></p>
+        </form>
+        <div class="market-watch-grid" id="market-watch-grid"></div>
       </section>
     </main>
   </section>
@@ -215,7 +188,7 @@
       <section class="view-section" aria-labelledby="file-page-title">
         <div class="view-section-heading">
           <h2 class="view-section-title" id="file-page-title">资料分类</h2>
-          <span class="mock-data-label">模拟数据</span>
+          <span class="data-source-label">模拟数据</span>
         </div>
         <div class="page-file-library" id="file-page-list"></div>
       </section>
@@ -249,18 +222,35 @@
       <section class="view-section" aria-labelledby="data-management-title">
         <div class="view-section-heading">
           <h2 class="view-section-title" id="data-management-title">JSON 数据导入</h2>
-          <span class="mock-data-label">本地保存</span>
+          <span class="data-source-label">本地保存</span>
         </div>
         <div class="data-import-panel" id="data-import-panel"></div>
       </section>
     </main>
   </section>
 
+  <!-- ========== Tesla 页面 ========== -->
+  <section class="app-view secondary-view tesla-fleet-view" id="view-tesla" data-view="tesla" hidden>
+    <header class="view-header">
+      <h1 class="view-title">Tesla</h1>
+      <p class="view-subtitle">车辆与快捷控制入口</p>
+    </header>
+    <main class="view-main">
+      <section class="view-section" aria-labelledby="tesla-fleet-title">
+        <div class="view-section-heading">
+          <h2 class="view-section-title" id="tesla-fleet-title">我的车辆</h2>
+          <span class="data-source-label">vehicleData</span>
+        </div>
+        <div class="tesla-fleet-grid" id="tesla-fleet-list"></div>
+      </section>
+    </main>
+  </section>
+
   <!-- ========== Tesla 控制页面 ========== -->
-  <section class="app-view tesla-control-view" id="view-tesla" data-view="tesla" hidden>
+  <section class="app-view tesla-control-view" id="view-tesla-control" data-view="tesla-control" hidden>
     <header class="tesla-control-header">
       <button class="tesla-back-button" type="button" data-tesla-back>
-        <span aria-hidden="true">‹</span> 首页
+        <span aria-hidden="true">‹</span> Tesla
       </button>
       <span class="tesla-header-status"><i aria-hidden="true"></i>模拟控制</span>
     </header>
@@ -283,13 +273,13 @@
       <span class="nav-icon">🏠</span>
       <span class="nav-label">首页</span>
     </button>
-    <button class="nav-item" type="button" data-page="market">
+    <button class="nav-item" type="button" data-page="market-watch" aria-controls="view-market-watch">
       <span class="nav-icon">📈</span>
       <span class="nav-label">行情</span>
     </button>
-    <button class="nav-item" type="button" data-page="project" aria-controls="view-project">
-      <span class="nav-icon">📋</span>
-      <span class="nav-label">项目</span>
+    <button class="nav-item" type="button" data-page="tesla" aria-controls="view-tesla">
+      <span class="nav-icon">🚘</span>
+      <span class="nav-label">Tesla</span>
     </button>
     <button class="nav-item" type="button" data-page="file" aria-controls="view-file">
       <span class="nav-icon">📂</span>
@@ -304,10 +294,8 @@
   <!-- 数据与逻辑 -->
   <script src="dataStore.js"></script>
   <script src="futuresData.js"></script>
-    <script src="vehicleData.js"></script>
-  <script src="projectData.js"></script>
+  <script src="vehicleData.js"></script>
   <script src="accountData.js"></script>
-  <script src="tradeLog.js"></script>
   <script src="data.js"></script>
   <script src="pages.js"></script>
   <script src="script.js"></script>

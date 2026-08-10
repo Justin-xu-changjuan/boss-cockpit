@@ -4,7 +4,7 @@
  */
 (() => {
   const STORAGE_KEY = 'boss-cockpit-data-v1';
-  const modules = ['futuresData', 'vehicleData', 'projectData', 'accountData', 'tradeLog', 'todayFocus', 'positions', 'fileEntries', 'quickActions'];
+  const modules = ['futuresData', 'vehicleData', 'accountData', 'positions', 'fileEntries'];
   let stored = {};
 
   try {
@@ -12,21 +12,40 @@
   } catch (error) {
     console.warn('[BossData] localStorage 不可用，将使用当前会话数据。', error);
   }
+  const storedEntries = Object.entries(stored);
+  stored = Object.fromEntries(storedEntries.filter(([moduleName]) => modules.includes(moduleName)));
+  const needsStorageCleanup = storedEntries.length !== Object.keys(stored).length;
 
   const clone = value => JSON.parse(JSON.stringify(value));
+  const normalizeFutures = value => (Array.isArray(value) ? value : []).map(item => ({
+    code: String(item?.code ?? '').trim(),
+    name: String(item?.name ?? '').trim(),
+    price: item?.price ?? null,
+    unit: String(item?.unit ?? '').trim()
+  }));
+  const normalizePositions = value => (Array.isArray(value) ? value : []).map(item => ({
+    code: String(item?.code ?? '').trim(),
+    direction: String(item?.direction ?? '').trim(),
+    quantity: item?.quantity ?? 0,
+    cost: item?.cost ?? null,
+    currentPrice: item?.currentPrice ?? null,
+    floatingPnl: item?.floatingPnl ?? null,
+    target: item?.target ?? null,
+    stopLoss: item?.stopLoss ?? null,
+    plan: String(item?.plan ?? '').trim()
+  }));
   const normalize = (moduleName, value) => {
+    if (moduleName === 'futuresData') return normalizeFutures(value);
+    if (moduleName === 'positions') return normalizePositions(value);
     if (moduleName === 'accountData') {
       return {
         equity: value?.equity ?? null,
         availableFunds: value?.availableFunds ?? null,
-        margin: value?.margin ?? value?.occupiedMargin ?? null
+        margin: value?.margin ?? value?.occupiedMargin ?? null,
+        floatingPnl: value?.floatingPnl ?? null
       };
     }
     return value;
-  };
-  const syncAliases = moduleName => {
-    if (moduleName === 'futuresData') window.futureData = window.futuresData;
-    if (moduleName === 'projectData') window.projects = window.projectData;
   };
   const save = () => {
     try {
@@ -35,22 +54,27 @@
       console.warn('[BossData] 保存本地数据失败。', error);
     }
   };
+  if (needsStorageCleanup) save();
 
   const register = (moduleName, defaults) => {
-    const value = Array.isArray(stored[moduleName]) || (stored[moduleName] && typeof stored[moduleName] === 'object')
-      ? stored[moduleName]
+    const hasStoredValue = Array.isArray(stored[moduleName]) || (stored[moduleName] && typeof stored[moduleName] === 'object');
+    const value = hasStoredValue
+      ? (moduleName === 'accountData' ? { ...defaults, ...stored[moduleName] } : stored[moduleName])
       : defaults;
     stored[moduleName] = clone(normalize(moduleName, value));
     window[moduleName] = clone(stored[moduleName]);
-    syncAliases(moduleName);
+    if (hasStoredValue && ['futuresData', 'positions'].includes(moduleName)) save();
     return window[moduleName];
+  };
+
+  const applyModule = (moduleName, value) => {
+    stored[moduleName] = clone(normalize(moduleName, value));
+    window[moduleName] = clone(stored[moduleName]);
   };
 
   const replace = (moduleName, value) => {
     if (!modules.includes(moduleName)) throw new Error(`未知数据模块：${moduleName}`);
-    stored[moduleName] = clone(normalize(moduleName, value));
-    window[moduleName] = clone(stored[moduleName]);
-    syncAliases(moduleName);
+    applyModule(moduleName, value);
     save();
     window.dispatchEvent(new CustomEvent('bossdatachange', { detail: { module: moduleName } }));
   };
@@ -64,8 +88,7 @@
 
     const aliases = {
       futures: 'futuresData',
-      vehicles: 'vehicleData',
-      projects: 'projectData'
+      vehicles: 'vehicleData'
     };
     const imported = Object.entries(payload).reduce((result, [key, value]) => {
       const moduleName = aliases[key] || key;
@@ -74,8 +97,11 @@
     }, {});
     if (!Object.keys(imported).length) throw new Error('未找到可导入的数据模块。');
 
-    Object.entries(imported).forEach(([moduleName, value]) => replace(moduleName, value));
-    return Object.keys(imported);
+    const importedModules = Object.keys(imported);
+    Object.entries(imported).forEach(([moduleName, value]) => applyModule(moduleName, value));
+    save();
+    window.dispatchEvent(new CustomEvent('bossdatachange', { detail: { modules: importedModules } }));
+    return importedModules;
   };
 
   window.BossData = {

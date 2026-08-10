@@ -8,22 +8,36 @@
  */
 
 (() => {
-  const validPages = ['home', 'project', 'file', 'me', 'data'];
-  const pageNames = {
+  const appRoutes = ['home', 'market-watch', 'tesla', 'file', 'me', 'data', 'position', 'position-input'];
+  const routeTitles = {
     home: '老板驾驶舱',
-    project: '项目',
+    tesla: 'Tesla',
     file: '文件',
     me: '我的',
-    data: '数据管理'
-  };
-  const marketEntryConfig = {
-    shortcutName: 'OpenWenhua',
-    downloadUrl: 'https://app.wenhua.com.cn/download.html'
+    data: '数据管理',
+    position: '我的持仓',
+    'position-input': '持仓智能录入',
+    'market-watch': '行情关注'
   };
   const scrollPositions = new Map();
-  let marketLaunchInProgress = false;
   let teslaCommandTimer = null;
   let teslaReturnPage = 'home';
+  let appRouterInitialized = false;
+
+  function escapeHTML(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, character => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    })[character]);
+  }
+
+  function safeClassToken(value, fallback = 'default') {
+    const token = String(value || '').trim().toLowerCase();
+    return /^[a-z0-9_-]+$/.test(token) ? token : fallback;
+  }
 
   function notify(message) {
     if (typeof window.showToast === 'function') {
@@ -38,13 +52,13 @@
     return price.toLocaleString('zh-CN', { maximumFractionDigits: 1 });
   }
 
-  function getPageFromHash() {
-    const page = window.location.hash.replace('#', '');
-    return validPages.includes(page) ? page : 'home';
+  function getRouteFromHash() {
+    const route = window.location.hash.replace('#', '');
+    return appRoutes.includes(route) ? route : 'home';
   }
 
-  function activateAppTab(page, options = {}) {
-    const targetPage = validPages.includes(page) ? page : 'home';
+  function activateRoute(route, options = {}) {
+    const targetPage = appRoutes.includes(route) ? route : 'home';
     const activeView = document.querySelector('.app-view.is-active');
     const targetView = document.getElementById(`view-${targetPage}`);
     if (!targetView) return;
@@ -60,7 +74,9 @@
       view.setAttribute('aria-hidden', String(!isTarget));
     });
 
-    const activeTabPage = targetPage === 'data' ? 'me' : targetPage;
+    const activeTabPage = targetPage === 'data'
+      ? 'me'
+      : (['position', 'position-input'].includes(targetPage) ? 'home' : targetPage);
     document.querySelectorAll('.nav-item').forEach(item => {
       const isActive = item.dataset.page === activeTabPage;
       item.classList.toggle('active', isActive);
@@ -70,7 +86,7 @@
 
     document.title = targetPage === 'home'
       ? '老板驾驶舱'
-      : `${pageNames[targetPage]} · 老板驾驶舱`;
+      : `${routeTitles[targetPage]} · 老板驾驶舱`;
 
     if (options.restoreScroll !== false) {
       window.requestAnimationFrame(() => {
@@ -84,13 +100,28 @@
       || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   }
 
-  function closeMarketFallback() {
-    document.getElementById('market-entry-sheet')?.remove();
-  }
-
   function getTeslaVehicle(vehicleId) {
     const vehicles = window.vehicleData || [];
     return vehicles.find(vehicle => vehicle.id === vehicleId) || vehicles[0];
+  }
+
+  function renderTeslaFleetPage() {
+    const list = document.getElementById('tesla-fleet-list');
+    if (!list) return;
+    const vehicles = Array.isArray(window.vehicleData) ? window.vehicleData : [];
+    list.innerHTML = vehicles.length ? vehicles.map(vehicle => `
+      <button class="tesla-fleet-card tesla-${safeClassToken(vehicle.tone)}" type="button" data-vehicle="${escapeHTML(vehicle.id)}">
+        <span class="tesla-fleet-mark" aria-hidden="true">${escapeHTML(vehicle.mark || 'T')}</span>
+        <span class="tesla-fleet-copy">
+          <strong>${escapeHTML(vehicle.shortName || vehicle.name || 'Tesla')}</strong>
+          <span>${escapeHTML(vehicle.colorName || '')} · ${escapeHTML(vehicle.status || '状态模拟')}</span>
+        </span>
+        <span class="tesla-fleet-arrow" aria-hidden="true">↗</span>
+      </button>
+    `).join('') : '<div class="tesla-fleet-empty">暂无车辆数据</div>';
+    list.querySelectorAll('[data-vehicle]').forEach(button => {
+      button.addEventListener('click', () => openTeslaControl(button.dataset.vehicle));
+    });
   }
 
   function renderTeslaControl(vehicleId) {
@@ -101,12 +132,12 @@
     if (!hero || !commandGrid || !feedback) return;
 
     hero.innerHTML = `
-      <div class="tesla-control-hero ${vehicle.tone}">
-        <div class="tesla-control-vehicle-mark" aria-hidden="true">${vehicle.mark}</div>
+      <div class="tesla-control-hero ${safeClassToken(vehicle.tone)}">
+        <div class="tesla-control-vehicle-mark" aria-hidden="true">${escapeHTML(vehicle.mark)}</div>
         <div class="tesla-control-vehicle-copy">
           <span class="tesla-control-kicker">TESLA CONTROL</span>
-          <h1>${vehicle.name}</h1>
-          <span>${vehicle.colorName} · ${vehicle.status || '状态模拟'}</span>
+          <h1>${escapeHTML(vehicle.name)}</h1>
+          <span>${escapeHTML(vehicle.colorName)} · ${escapeHTML(vehicle.status || '状态模拟')}</span>
         </div>
         <span class="tesla-online-badge"><i aria-hidden="true"></i>快捷指令</span>
       </div>
@@ -114,9 +145,9 @@
 
     commandGrid.innerHTML = (vehicle.controls || []).map(command => {
       return `
-        <button class="tesla-command-button" type="button" data-command="${command.id}">
-          <span class="tesla-command-icon" aria-hidden="true">${command.icon}</span>
-          <span class="tesla-command-label">${command.label}</span>
+        <button class="tesla-command-button" type="button" data-command="${escapeHTML(command.id)}">
+          <span class="tesla-command-icon" aria-hidden="true">${escapeHTML(command.icon)}</span>
+          <span class="tesla-command-label">${escapeHTML(command.label)}</span>
           <span class="tesla-command-state">Shortcut</span>
         </button>
       `;
@@ -164,14 +195,14 @@
       button.classList.add('is-complete');
       unlockButtons();
       feedback.className = 'tesla-feedback is-complete';
-      feedback.innerHTML = `<span aria-hidden="true">✓</span>${vehicle.name} · ${command.label}执行完成`;
+      feedback.innerHTML = `<span aria-hidden="true">✓</span>${escapeHTML(vehicle.name)} · ${escapeHTML(command.label)}执行完成`;
     };
     const showShortcutMissing = () => {
       cleanupShortcutListeners();
       button.classList.remove('is-sending');
       unlockButtons();
       feedback.className = 'tesla-feedback is-error';
-      feedback.innerHTML = `<span aria-hidden="true">!</span>请先创建对应快捷指令：${shortcutName}`;
+      feedback.innerHTML = `<span aria-hidden="true">!</span>请先创建对应快捷指令：${escapeHTML(shortcutName)}`;
     };
     const handleShortcutVisibility = () => {
       if (document.visibilityState === 'hidden') {
@@ -210,23 +241,23 @@
     }
   }
 
-  function showTeslaPage(vehicleId) {
+  function showTeslaControlPage(vehicleId) {
     const vehicle = getTeslaVehicle(vehicleId);
     const activeView = document.querySelector('.app-view.is-active');
-    if (activeView && activeView.dataset.view !== 'tesla') {
+    if (activeView && activeView.dataset.view !== 'tesla-control') {
       teslaReturnPage = activeView.dataset.view || 'home';
     }
 
     document.querySelectorAll('.app-view').forEach(view => {
-      const isTesla = view.id === 'view-tesla';
+      const isTesla = view.id === 'view-tesla-control';
       view.hidden = !isTesla;
       view.classList.toggle('is-active', isTesla);
       view.setAttribute('aria-hidden', String(!isTesla));
     });
     document.querySelectorAll('.nav-item').forEach(item => {
-      const isHome = item.dataset.page === 'home';
-      item.classList.toggle('active', isHome);
-      if (isHome) item.setAttribute('aria-current', 'page');
+      const isTesla = item.dataset.page === 'tesla';
+      item.classList.toggle('active', isTesla);
+      if (isTesla) item.setAttribute('aria-current', 'page');
       else item.removeAttribute('aria-current');
     });
     document.title = `${vehicle.name} · Tesla 控制`;
@@ -234,126 +265,14 @@
     window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
   }
 
-  function closeTeslaPage() {
+  function closeTeslaControlPage() {
     window.clearTimeout(teslaCommandTimer);
-    window.location.hash = teslaReturnPage || 'home';
+    window.location.hash = teslaReturnPage || 'tesla';
   }
 
   function openTeslaControl(vehicleId) {
     if (!(window.vehicleData || []).some(vehicle => vehicle.id === vehicleId)) return;
     window.location.hash = vehicleId;
-  }
-
-  function showMarketFallback() {
-    closeMarketFallback();
-
-    const sheet = document.createElement('div');
-    sheet.id = 'market-entry-sheet';
-    sheet.className = 'market-entry-backdrop';
-    sheet.setAttribute('role', 'dialog');
-    sheet.setAttribute('aria-modal', 'true');
-    sheet.setAttribute('aria-labelledby', 'market-entry-title');
-    sheet.innerHTML = `
-      <div class="market-entry-sheet">
-        <div class="market-entry-handle" aria-hidden="true"></div>
-        <span class="market-entry-symbol" aria-hidden="true">↗</span>
-        <h2 id="market-entry-title">请先创建对应快捷指令</h2>
-        <p>快捷指令名称：${marketEntryConfig.shortcutName}<br>老板驾驶舱继续负责决策信息与持仓管理，实时行情交给专业交易软件。</p>
-        <a class="market-entry-download" href="${marketEntryConfig.downloadUrl}" target="_blank" rel="noopener">
-          查看文华财经随身行
-        </a>
-        <button class="market-entry-dismiss" type="button">返回驾驶舱</button>
-      </div>
-    `;
-    document.body.appendChild(sheet);
-    sheet.querySelector('.market-entry-dismiss').addEventListener('click', closeMarketFallback);
-    sheet.addEventListener('click', event => {
-      if (event.target === sheet) closeMarketFallback();
-    });
-  }
-
-  function launchExternalMarket() {
-    if (marketLaunchInProgress) return;
-    marketLaunchInProgress = true;
-
-    if (!isIOSDevice()) {
-      showMarketFallback();
-      marketLaunchInProgress = false;
-      return;
-    }
-
-    let appWasOpened = false;
-    const cleanup = () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('pagehide', handlePageHide);
-    };
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        appWasOpened = true;
-        cleanup();
-        marketLaunchInProgress = false;
-      }
-    };
-    const handlePageHide = () => {
-      appWasOpened = true;
-      cleanup();
-      marketLaunchInProgress = false;
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('pagehide', handlePageHide);
-
-    window.setTimeout(() => {
-      cleanup();
-      marketLaunchInProgress = false;
-      if (!appWasOpened && document.visibilityState === 'visible') {
-        showMarketFallback();
-      }
-    }, 1100);
-
-    try {
-      window.location.href = `shortcuts://run-shortcut?name=${encodeURIComponent(marketEntryConfig.shortcutName)}`;
-    } catch (error) {
-      showMarketFallback();
-      cleanup();
-      marketLaunchInProgress = false;
-    }
-  }
-
-  function renderProjectPage() {
-    const list = document.getElementById('project-page-list');
-    if (!list) return;
-
-    const projects = window.projects || [];
-    list.innerHTML = projects.map(project => `
-      <article class="page-project-card">
-        <div class="page-project-heading">
-          <div>
-            <h3>${project.name}</h3>
-            <span>${project.status}</span>
-          </div>
-          <span class="page-state-badge">${project.status || '推进中'}</span>
-        </div>
-        <div class="page-project-next">
-          <span>下一步</span>
-          <strong>${project.nextStep || '持续推进'}</strong>
-        </div>
-        <div class="page-progress-copy">
-          <span>当前进度</span>
-          <strong>${project.progress}%</strong>
-        </div>
-        <div class="page-progress-track" aria-label="项目进度 ${project.progress}%">
-          <span style="width:${project.progress}%"></span>
-        </div>
-        <button class="page-project-action page-action" type="button" data-id="${project.id}">
-          查看项目详情 <span aria-hidden="true">→</span>
-        </button>
-      </article>
-    `).join('');
-
-    list.querySelectorAll('.page-project-action').forEach(button => {
-      button.addEventListener('click', () => notify('项目详情（模拟数据）'));
-    });
   }
 
   function renderFilePage() {
@@ -375,15 +294,15 @@
           <span class="page-muted-label">企业资料中心</span>
           <strong>${files.length} 类资料</strong>
         </div>
-        <span>最近访问：${files[0]?.name || '暂无'}</span>
+        <span>最近访问：${escapeHTML(files[0]?.name || '暂无')}</span>
       </div>
       <div class="file-page-list">
         ${files.map(file => `
-          <button class="page-file-row page-action" type="button" data-id="${file.id}">
-            <span class="page-file-symbol" aria-hidden="true">${symbols[file.id] || '•'}</span>
+          <button class="page-file-row page-action" type="button" data-id="${escapeHTML(file.id)}">
+            <span class="page-file-symbol" aria-hidden="true">${escapeHTML(symbols[file.id] || '•')}</span>
             <span class="page-file-copy">
-              <strong>${file.name}</strong>
-              <span>${descriptions[file.id] || '企业资料'}</span>
+              <strong>${escapeHTML(file.name)}</strong>
+              <span>${escapeHTML(descriptions[file.id] || '企业资料')}</span>
             </span>
             <span class="page-row-arrow" aria-hidden="true">›</span>
           </button>
@@ -446,8 +365,8 @@
     if (!panel) return;
 
     panel.innerHTML = `
-      <p class="data-import-help">支持模块：<code>futuresData</code>、<code>vehicleData</code>、<code>projectData</code>、<code>accountData</code>、<code>positions</code>、<code>tradeLog</code>，以及首页的重点和文件数据。</p>
-      <textarea class="data-import-textarea" id="data-import-input" spellcheck="false" placeholder='粘贴 JSON，例如：{"positions":[{"code":"RB2610","direction":"多","quantity":6,"multiplier":10,"cost":2997.5}]}'></textarea>
+      <p class="data-import-help">支持模块：<code>futuresData</code>、<code>vehicleData</code>、<code>accountData</code>、<code>positions</code>、<code>fileEntries</code>。</p>
+      <textarea class="data-import-textarea" id="data-import-input" spellcheck="false" placeholder='粘贴 JSON，例如：{"positions":[{"code":"RB2610","direction":"多","quantity":6,"cost":2997.5,"currentPrice":3010,"floatingPnl":750,"target":3120,"stopLoss":2960,"plan":"目标 3120，止损 2960"}]}'></textarea>
       <div class="data-import-actions">
         <button class="data-import-button" type="button" id="data-import-submit">导入数据</button>
         <button class="data-import-secondary" type="button" id="data-export-copy">复制当前数据</button>
@@ -481,26 +400,325 @@
     });
   }
 
-  function renderAppPages(options = {}) {
-    renderProjectPage();
-    renderFilePage();
-    renderProfilePage();
-    if (!options.skipData) renderDataPage();
+  function renderPositionInputPage() {
+    const panel = document.getElementById('position-input-panel');
+    if (!panel) return;
+    panel.innerHTML = `
+      <p class="position-input-help">只填合约代码和价格时，仅更新行情关注；方向、持仓数量、成本三项齐全时，同时新增或更新我的持仓。目标、止损和操作计划为可选持仓字段。</p>
+      <form class="position-input-form" id="position-input-form" autocomplete="off">
+        <div class="position-input-form-grid">
+          <label class="position-input-field">
+            <span>合约代码 <em>*</em></span>
+            <input name="code" type="text" maxlength="16" autocomplete="off" placeholder="例如 RB2610" required>
+          </label>
+          <label class="position-input-field">
+            <span>价格 <em>*</em></span>
+            <input name="price" type="number" inputmode="decimal" step="any" autocomplete="off" placeholder="例如 3015" required>
+          </label>
+          <label class="position-input-field">
+            <span>方向</span>
+            <input name="direction" type="text" maxlength="8" autocomplete="off" placeholder="多 / 空">
+          </label>
+          <label class="position-input-field">
+            <span>持仓数量</span>
+            <input name="quantity" type="number" inputmode="numeric" min="0" step="1" autocomplete="off" placeholder="例如 6">
+          </label>
+          <label class="position-input-field">
+            <span>成本</span>
+            <input name="cost" type="number" inputmode="decimal" step="any" autocomplete="off" placeholder="例如 2997.5">
+          </label>
+          <label class="position-input-field">
+            <span>目标</span>
+            <input name="target" type="number" inputmode="decimal" step="any" autocomplete="off" placeholder="可选">
+          </label>
+          <label class="position-input-field">
+            <span>止损</span>
+            <input name="stopLoss" type="number" inputmode="decimal" step="any" autocomplete="off" placeholder="可选">
+          </label>
+          <label class="position-input-field position-input-plan-field">
+            <span>操作计划</span>
+            <textarea name="plan" rows="3" maxlength="240" placeholder="可选，例如：目标 3120，止损 2960"></textarea>
+          </label>
+        </div>
+        <button class="position-input-submit" type="submit">保存并返回持仓</button>
+        <p class="position-input-feedback" id="position-input-feedback" role="status" aria-live="polite">数据会保存到本机，并返回我的持仓。</p>
+      </form>
+    `;
+    const form = panel.querySelector('#position-input-form');
+    const feedback = panel.querySelector('#position-input-feedback');
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      try {
+        const result = updatePositionFromForm(form);
+        feedback.className = 'position-input-feedback is-success';
+        feedback.textContent = result.positionUpdated
+          ? `已更新行情，并保存 ${result.code} 持仓。`
+          : `已更新 ${result.code} 行情，未修改 positions。`;
+        window.location.hash = 'position';
+      } catch (error) {
+        feedback.className = 'position-input-feedback is-error';
+        feedback.textContent = `录入失败：${error.message}`;
+      }
+    });
+    window.setTimeout(() => form.reset(), 0);
   }
 
-  function initAppTabs() {
-    document.querySelector('[data-tesla-back]')?.addEventListener('click', closeTeslaPage);
+  function updatePositionFromForm(form) {
+    const code = String(form.elements.code?.value || '').trim().toUpperCase();
+    const priceText = String(form.elements.price?.value || '').trim();
+    const direction = String(form.elements.direction?.value || '').trim();
+    const quantityText = String(form.elements.quantity?.value || '').trim();
+    const costText = String(form.elements.cost?.value || '').trim();
+    const targetText = String(form.elements.target?.value || '').trim();
+    const stopLossText = String(form.elements.stopLoss?.value || '').trim();
+    const plan = String(form.elements.plan?.value || '').trim();
+    if (!code) throw new Error('请填写合约代码。');
+    if (!priceText || !Number.isFinite(Number(priceText))) throw new Error('请填写有效价格。');
+
+    const price = Number(priceText);
+    const positionFields = [direction, quantityText, costText];
+    const hasAnyPositionField = positionFields.some(Boolean);
+    const hasCompletePosition = positionFields.every(Boolean)
+      && Number.isFinite(Number(quantityText))
+      && Number.isFinite(Number(costText));
+    if (hasAnyPositionField && !hasCompletePosition) {
+      // 只要代码和价格有效，行情仍然可以更新；不完整的持仓字段不会写入 positions。
+      const missing = [];
+      if (!direction) missing.push('方向');
+      if (!quantityText || !Number.isFinite(Number(quantityText))) missing.push('有效持仓数量');
+      if (!costText || !Number.isFinite(Number(costText))) missing.push('有效成本');
+      updatePositionQuote(code, price);
+      throw new Error(`行情已更新，但持仓字段不完整（还需${missing.join('、')}），未修改 positions。`);
+    }
+
+    const parseOptionalNumber = (text, label) => {
+      if (!text) return null;
+      if (!Number.isFinite(Number(text))) throw new Error(`请填写有效${label}。`);
+      return Number(text);
+    };
+    const target = hasCompletePosition ? parseOptionalNumber(targetText, '目标') : null;
+    const stopLoss = hasCompletePosition ? parseOptionalNumber(stopLossText, '止损') : null;
+    const currentQuotes = updatePositionQuote(code, price);
+    if (!hasCompletePosition) return { code, positionUpdated: false, currentQuotes };
+
+    const quantity = Number(quantityText);
+    const cost = Number(costText);
+    const currentPositions = Array.isArray(window.positions) ? [...window.positions] : [];
+    const positionKey = item => `${String(item?.code || '').trim().toUpperCase()}::${String(item?.direction || '').trim().toUpperCase()}`;
+    const key = `${code}::${direction.toUpperCase()}`;
+    const existing = currentPositions.find(item => positionKey(item) === key);
+    const nextPositions = currentPositions.filter(item => positionKey(item) !== key);
+
+    // 数量为 0 表示平仓；仍保留本次行情更新，但不保留 0 手持仓卡片。
+    if (quantity > 0) {
+      nextPositions.push({
+        code,
+        direction,
+        quantity,
+        cost,
+        currentPrice: price,
+        floatingPnl: existing?.floatingPnl ?? null,
+        target: target ?? existing?.target ?? null,
+        stopLoss: stopLoss ?? existing?.stopLoss ?? null,
+        plan: plan || existing?.plan || ''
+      });
+    }
+    window.BossData.replace('positions', nextPositions);
+    return { code, positionUpdated: true, currentQuotes };
+  }
+
+  function updatePositionQuote(code, price) {
+    const currentQuotes = Array.isArray(window.futuresData) ? [...window.futuresData] : [];
+    const nameByPrefix = { RB: '螺纹钢', JM: '焦煤', HC: '热卷', J: '焦炭', AU: '黄金', CU: '铜' };
+    const unitByPrefix = { AU: '元/克' };
+    const index = currentQuotes.findIndex(item => String(item?.code || '').trim().toUpperCase() === code);
+    const prefix = code.match(/^[A-Z]+/)?.[0] || '';
+    const existing = index >= 0 ? currentQuotes[index] : null;
+    const quote = {
+      code,
+      name: existing?.name || nameByPrefix[prefix] || code,
+      price,
+      unit: existing?.unit || unitByPrefix[prefix] || '元/吨'
+    };
+    if (index >= 0) currentQuotes[index] = quote;
+    else currentQuotes.push(quote);
+    window.BossData.replace('futuresData', currentQuotes);
+    return currentQuotes;
+  }
+
+  function renderMarketWatchPage() {
+    const grid = document.getElementById('market-watch-grid');
+    if (!grid) return;
+    const quotes = Array.isArray(window.futuresData) ? window.futuresData : [];
+    grid.innerHTML = quotes.length ? quotes.map(quote => `
+      <article class="market-watch-card">
+        <div class="market-watch-card-head">
+          <div><strong>${escapeHTML(quote?.code || '待补代码')}</strong><span>${escapeHTML(quote?.name || '关注合约')}</span></div>
+          <span class="market-watch-unit">${escapeHTML(quote?.unit || '价格')}</span>
+        </div>
+        <strong class="market-watch-price">${quote?.price !== null && quote?.price !== undefined && quote?.price !== '' && Number.isFinite(Number(quote.price)) ? formatPagePrice(Number(quote.price)) : '—'}</strong>
+      </article>
+    `).join('') : '<div class="market-watch-empty">暂无关注合约</div>';
+  }
+
+  function renderPositionPage() {
+    const list = document.getElementById('position-page-list');
+    if (!list) return;
+    const positions = (window.positions || []).filter(position => Number(position.quantity) > 0);
+    if (!positions.length) {
+      list.innerHTML = '<div class="position-empty">暂无真实持仓</div>';
+      return;
+    }
+    const positionNameByPrefix = {
+      RB: '螺纹钢',
+      JM: '焦煤',
+      AU: '黄金',
+      CU: '铜',
+      HC: '热卷',
+      J: '焦炭'
+    };
+    const formatPositionValue = value => value === null || value === undefined || value === '' || !Number.isFinite(Number(value))
+      ? '—'
+      : formatPagePrice(Number(value));
+
+    list.innerHTML = positions.map(position => {
+      const code = String(position.code || '—').trim().toUpperCase();
+      const prefix = code.match(/^[A-Z]+/)?.[0] || '';
+      const name = positionNameByPrefix[prefix] || code;
+      const floatingPnl = Number(position.floatingPnl);
+      const pnlText = Number.isFinite(floatingPnl)
+        ? `${floatingPnl > 0 ? '+' : ''}¥${Math.abs(floatingPnl).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : '—';
+      const pnlClass = floatingPnl >= 0 ? 'position-pnl-up' : 'position-pnl-down';
+      const direction = String(position.direction || '').toLowerCase();
+      const directionClass = ['空', '空头', 'short', 'sell'].includes(direction) ? 'short' : 'long';
+      return `
+        <article class="position-card position-page-card">
+          <div class="position-contract-meta">
+            <div class="position-field"><span class="position-label">合约名称</span><strong class="position-value">${escapeHTML(name)}</strong></div>
+            <div class="position-field"><span class="position-label">合约代码</span><strong class="position-value">${escapeHTML(code)}</strong></div>
+          </div>
+          <div class="position-header">
+            <span class="position-direction ${directionClass}">${escapeHTML(position.direction || '—')}</span>
+          </div>
+          <div class="position-grid">
+            <div class="position-field"><span class="position-label">持仓数量</span><span class="position-value">${position.quantity || '—'} 手</span></div>
+            <div class="position-field"><span class="position-label">成本</span><span class="position-value">${formatPositionValue(position.cost)}</span></div>
+            <div class="position-field"><span class="position-label">当前价格</span><span class="position-value">${formatPositionValue(position.currentPrice)}</span></div>
+            <div class="position-field"><span class="position-label">浮盈</span><span class="position-value ${Number.isFinite(floatingPnl) ? pnlClass : ''}">${pnlText}</span></div>
+            <div class="position-field"><span class="position-label">目标</span><span class="position-value">${formatPositionValue(position.target)}</span></div>
+            <div class="position-field"><span class="position-label">止损</span><span class="position-value">${formatPositionValue(position.stopLoss)}</span></div>
+          </div>
+          <div class="position-plan"><span class="position-label">操作计划</span><span class="position-value">${escapeHTML(position.plan || '—')}</span></div>
+        </article>
+      `;
+    }).join('');
+  }
+
+  function setMarketWatchFormOpen(isOpen) {
+    const form = document.getElementById('market-watch-add-form');
+    const toggle = document.querySelector('[data-market-add-toggle]');
+    if (!form || !toggle) return;
+    form.hidden = !isOpen;
+    toggle.setAttribute('aria-expanded', String(isOpen));
+    if (isOpen) form.querySelector('input[name="code"]')?.focus();
+  }
+
+  function saveMarketWatchContract(form) {
+    const code = String(form.elements.code?.value || '').trim().toUpperCase();
+    const name = String(form.elements.name?.value || '').trim();
+    const unit = String(form.elements.unit?.value || '').trim();
+    if (!code || !name || !unit) throw new Error('请完整填写合约代码、合约名称和单位。');
+
+    const currentQuotes = Array.isArray(window.futuresData) ? [...window.futuresData] : [];
+    if (currentQuotes.some(item => String(item?.code || '').trim().toUpperCase() === code)) {
+      throw new Error('该合约代码已在关注列表中。');
+    }
+
+    const quote = {
+      code,
+      name,
+      price: null,
+      unit
+    };
+    window.BossData.replace('futuresData', [...currentQuotes, quote]);
+    return quote;
+  }
+
+  function renderAppPages(options = {}) {
+    const changedModules = Array.isArray(options.changedModules) ? new Set(options.changedModules) : null;
+    if (!changedModules || changedModules.has('vehicleData')) renderTeslaFleetPage();
+    if (!changedModules || changedModules.has('fileEntries')) renderFilePage();
+    if (!changedModules) {
+      renderProfilePage();
+      renderDataPage();
+      renderPositionInputPage();
+    }
+    if (!changedModules || changedModules.has('positions')) renderPositionPage();
+    if (!changedModules || changedModules.has('futuresData')) renderMarketWatchPage();
+  }
+
+  function initAppRouter() {
+    if (appRouterInitialized) return;
+    appRouterInitialized = true;
+    document.querySelector('[data-tesla-back]')?.addEventListener('click', closeTeslaControlPage);
+    document.querySelector('[data-position-input-back]')?.addEventListener('click', () => {
+      window.location.hash = 'position';
+    });
+    document.querySelector('[data-position-back]')?.addEventListener('click', () => {
+      window.location.hash = 'home';
+    });
+    document.querySelector('[data-position-input-from-page]')?.addEventListener('click', () => {
+      renderPositionInputPage();
+      window.location.hash = 'position-input';
+    });
+    document.addEventListener('click', event => {
+      if (event.target.closest('[data-position-preview]')) window.location.hash = 'position';
+      if (event.target.closest('[data-market-watch-card]')) window.location.hash = 'market-watch';
+    });
+    document.querySelectorAll('[data-market-watch]').forEach(button => {
+      button.addEventListener('click', () => {
+        window.location.hash = 'market-watch';
+      });
+    });
+    document.querySelector('[data-market-watch-back]')?.addEventListener('click', () => {
+      window.location.hash = 'home';
+    });
+    document.querySelector('[data-market-add-toggle]')?.addEventListener('click', event => {
+      const isOpen = event.currentTarget.getAttribute('aria-expanded') === 'true';
+      setMarketWatchFormOpen(!isOpen);
+    });
+    document.querySelector('[data-market-add-cancel]')?.addEventListener('click', () => {
+      const form = document.getElementById('market-watch-add-form');
+      form?.reset();
+      setMarketWatchFormOpen(false);
+    });
+    document.getElementById('market-watch-add-form')?.addEventListener('submit', event => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const feedback = document.getElementById('market-watch-form-feedback');
+      try {
+        const quote = saveMarketWatchContract(form);
+        form.reset();
+        setMarketWatchFormOpen(false);
+        if (feedback) {
+          feedback.className = 'market-watch-form-feedback is-success';
+          feedback.textContent = `已添加 ${quote.code}，行情列表已更新。`;
+        }
+      } catch (error) {
+        if (feedback) {
+          feedback.className = 'market-watch-form-feedback is-error';
+          feedback.textContent = error.message;
+        }
+      }
+    });
 
     document.querySelectorAll('.nav-item').forEach(item => {
       item.addEventListener('click', () => {
         const page = item.dataset.page;
-        if (page === 'market') {
-          launchExternalMarket();
-          return;
-        }
         const targetHash = `#${page}`;
         if (window.location.hash === targetHash) {
-          activateAppTab(page);
+          activateRoute(page);
         } else {
           window.location.hash = page;
         }
@@ -509,36 +727,25 @@
 
     window.addEventListener('hashchange', () => {
       if ((window.vehicleData || []).some(vehicle => vehicle.id === window.location.hash.slice(1))) {
-        showTeslaPage(window.location.hash.slice(1));
+        showTeslaControlPage(window.location.hash.slice(1));
         return;
       }
-      if (window.location.hash === '#market') {
-        window.history.replaceState(null, '', `#${getPageFromHash()}`);
-        launchExternalMarket();
-        return;
-      }
-      activateAppTab(getPageFromHash());
+      activateRoute(getRouteFromHash());
     });
 
     const requestedHash = window.location.hash.slice(1);
     if ((window.vehicleData || []).some(vehicle => vehicle.id === requestedHash)) {
-      window.history.replaceState(null, '', '#home');
-      activateAppTab('home', { restoreScroll: false });
-      window.setTimeout(() => showTeslaPage(requestedHash), 0);
+      activateRoute('tesla', { restoreScroll: false });
+      window.setTimeout(() => showTeslaControlPage(requestedHash), 0);
       return;
     }
-    const initialPage = validPages.includes(requestedHash) ? requestedHash : 'home';
-    if (requestedHash === 'market') {
-      window.history.replaceState(null, '', '#home');
-      window.setTimeout(launchExternalMarket, 0);
-    } else if (!window.location.hash || !validPages.includes(requestedHash)) {
+    const initialPage = appRoutes.includes(requestedHash) ? requestedHash : 'home';
+    if (!window.location.hash || !appRoutes.includes(requestedHash)) {
       window.history.replaceState(null, '', '#home');
     }
-    activateAppTab(initialPage, { restoreScroll: false });
+    activateRoute(initialPage, { restoreScroll: false });
   }
 
   window.renderAppPages = renderAppPages;
-  window.initAppTabs = initAppTabs;
-  window.activateAppTab = activateAppTab;
-  window.openTeslaControl = openTeslaControl;
+  window.initAppRouter = initAppRouter;
 })();

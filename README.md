@@ -10,36 +10,34 @@ boss-cockpit/
 ├── style.css       # 样式（深色高级风格）
 ├── script.js       # 主逻辑与交互
 ├── dataStore.js    # 统一数据层、localStorage、AI JSON 导入
-├── data.js         # 今日重点、持仓、文件、快捷入口数据
-├── futuresData.js  # 独立期货数据模块 + getFutureQuotes()
+├── pages.js        # 页面路由与各模块页面渲染
+├── data.js         # 持仓与文件默认数据
+├── accountData.js  # 独立账户数据
+├── futuresData.js  # 独立行情数据
 ├── vehicleData.js  # 独立车辆与快捷指令配置
-├── projectData.js  # 独立企业项目数据
 ├── README.md       # 项目说明
-├── manifest.json    # PWA 安装配置
-└── icons/           # iPhone / PWA App 图标（180/192/512/1024）
+├── PRODUCT.md      # 产品与设计约束
+├── manifest.json   # PWA 安装配置
+└── icons/          # iPhone / PWA App 图标（180/192/512/1024）
     ├── app-icon-180.png
     ├── app-icon-192.png
     ├── app-icon-512.png
     └── app-icon-1024.png
 ```
 
-第二阶段已加入独立 App 启动层、CEO 英文副标题、玻璃拟态卡片、行情状态标签和 iOS 毛玻璃底部导航。页面仍为纯静态前端，不改变原有数据结构和交互逻辑。
+当前版本采用首页、行情、Tesla、文件、我的五个底部 Tab，通过 hash 路由切换，并支持浏览器返回、刷新直达和页面滚动位置恢复。页面为纯静态前端，未接入外部接口。
 
-第三阶段重组首页为 CEO 个人控制中心：新增今日经营状态、CEO 资源仪表盘、带说明的高级快捷入口，以及趋势判断和个人策略行情卡；原有今日重点、持仓、项目、文件和底部导航全部保留。
+第六阶段增加独立 Tesla 页面：底部导航进入 vehicleData 驱动的 Model X / Model 3 列表，首页不再展示 Tesla 卡片或车辆入口；点击车辆后进入对应控制页。控制按钮通过 iOS Shortcuts URL Scheme 调用对应快捷指令，不连接 Tesla API 或后端；未创建快捷指令时显示创建提示。
 
-第四阶段按 iPhone App 首页思维重新排版：首屏合并为单一核心经营状态卡，行情改为 RB2610 主卡与横向滑动次级行情，项目与企业资料改为大幅 App 模块，快捷控制、持仓和资源概览采用横向信息流。业务数据结构和原有入口逻辑保持不变。
+当前已配置快捷指令入口：Model 3 支持解锁、锁车、空调、后备箱；Model X 另支持左翼门、右翼门、关闭双翼门。
 
-第五阶段建立完整 App Tab 页面架构：首页、行情、项目、文件、我的五个页面通过底部导航和 hash 路由切换，支持浏览器返回与页面滚动位置恢复。新增页面继续读取本地模拟数据，未接入外部接口，首页原有视觉与数据结构保持不变。
+行情入口与底部“行情”统一进入 `market-watch` 页面，页面完整读取 `futuresData`，支持同品种不同月份合约并存；可在页面内添加关注合约（代码、名称、单位），新合约价格待录入时显示“—”。首页仅展示账户、持仓和行情摘要；“我的持仓”仅读取 `positions`。
 
-第六阶段增加 Tesla 快速控制中心：首页 Tesla 入口展示白色 Model X 和黑色 Model 3 两张车辆卡，点击进入对应控制页。控制按钮通过 iOS Shortcuts URL Scheme 调用对应快捷指令，不连接 Tesla API 或后端；未创建快捷指令时显示创建提示。
+数据通过 `accountData.js`、`futuresData.js`、`vehicleData.js`、`data.js` 分模块维护；`dataStore.js` 使用 `localStorage` 保存更新后的模块。可在控制台调用 `importBossData(json)` 导入 JSON，导入后页面自动刷新。
 
-当前已配置快捷指令：Model 3 使用 `3_OpenTrunk`、`3_ClimateOn`；Model X 使用 `X_OpenTrunk`、`X_OpenRightRear`、`X_OpenLeftRear`、`X_OpenDriverDoor`、`X_CloseRearDoors`、`X_ClimateOn`。
+期货数据结构已分离：`futuresData` 只包含 `code`、`name`、`price`、`unit`；`positions` 只包含 `code`、`direction`、`quantity`、`cost`、`currentPrice`、`floatingPnl`、`target`、`stopLoss`、`plan`。行情更新和持仓录入分别只写入对应模块。
 
-行情入口使用快捷指令 `OpenWenhua`，通过 `shortcuts://run-shortcut?name=OpenWenhua` 打开文华财经随身行；行情页面不在 Boss Cockpit 内部展开。
-
-第七阶段完成数据驱动架构：页面通过 `futuresData.js`、`vehicleData.js`、`projectData.js` 读取数据；`dataStore.js` 使用 `localStorage` 保存更新后的模块。可在控制台调用 `importBossData(json)` 导入 AI 生成的 JSON，导入后页面自动刷新。
-
-当前版本在“我的”页面增加了“数据管理”入口，可直接粘贴 JSON 导入；导入结果会保存到本机，并立即刷新首页及项目页面。
+当前版本在“我的”页面增加了“数据管理”入口，可直接粘贴 JSON 导入；导入结果会保存到本机，并立即刷新首页及相关数据页面。
 
 ## 本地预览（Mac）
 
@@ -104,7 +102,7 @@ vercel
 | 功能           | 位置说明 |
 |----------------|----------|
 | Tesla 控制     | `vehicleData.js` → `controls[].shortcut` 配置快捷指令名称，通过 `shortcuts://run-shortcut` 调用 |
-| 期货真实行情   | `futuresData.js` → `getFutureQuotes()` 替换为真实 fetch |
+| 期货真实行情   | 在保持 `futuresData` 结构不变的前提下接入独立数据服务 |
 | 数据库/持久化  | `dataStore.js` → 替换存储实现，或接入 IndexedDB / 后端 |
 | AI 助手        | 快捷按钮 + 独立页面，可接入 Grok API 等 |
 | 多页面切换     | 底部导航已预留，可扩展不同 section 显示/隐藏 |
@@ -122,8 +120,8 @@ vercel
 
 ```js
 importBossData({
-  futuresData: [{ id: 'rb2610', name: '螺纹钢', code: 'RB2610', price: 3050, change: 13, changePercent: 0.43, unit: '元/吨' }],
-  projectData: [{ id: 'proj-ai', name: 'AI算力项目', status: '合作沟通', progress: 50, nextStep: '确认方案' }]
+  futuresData: [{ code: 'RB2610', name: '螺纹钢', price: 3050, unit: '元/吨' }],
+  positions: [{ code: 'RB2610', direction: '多', quantity: 10, cost: 3000, currentPrice: 3050, floatingPnl: 500, target: 3200, stopLoss: 2950, plan: '按计划持有' }]
 })
 ```
 
