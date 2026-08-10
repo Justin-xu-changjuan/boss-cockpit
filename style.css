@@ -3431,3 +3431,214 @@ textarea:focus {
   position: relative;
   z-index: 3;
 }
+
+
+/* =========================================================
+   GPT 智能录入 + 今日行情
+   ========================================================= */
+.section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+.section-meta {
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.today-market-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.today-market-card {
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+  padding: 14px 14px 12px;
+}
+.today-market-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.today-market-head strong {
+  display: block;
+  font-size: 16px;
+  font-weight: 780;
+  color: var(--text-primary);
+}
+.today-market-head span {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text-secondary);
+}
+.today-market-price-block {
+  text-align: right;
+}
+.today-market-price-block em {
+  display: block;
+  font-style: normal;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 650;
+  margin-bottom: 2px;
+}
+.today-market-price-block b {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.today-market-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(242, 243, 245, 0.9);
+  border: 1px solid var(--line);
+}
+.today-market-grid em {
+  display: block;
+  font-style: normal;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 650;
+  margin-bottom: 3px;
+}
+.today-market-grid b {
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.today-market-grid b.is-up { color: #2F7A55; }
+.today-market-grid b.is-down { color: #C24B47; }
+.today-market-plan {
+  grid-column: 1 / -1;
+  padding-top: 4px;
+  border-top: 1px dashed var(--line);
+}
+.today-market-plan b {
+  font-weight: 650;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.today-market-empty {
+  padding: 18px 14px;
+  border-radius: 18px;
+  background: #FFFFFF;
+  border: 1px dashed var(--line);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.gpt-import-view .view-main {
+  width: min(100%, 720px);
+  margin: 0 auto;
+}
+.gpt-import-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gpt-import-help {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  font-weight: 550;
+}
+.gpt-import-help code {
+  font-size: 12px;
+  background: rgba(242, 243, 245, 0.95);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+.gpt-import-label {
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--text-primary);
+}
+.gpt-import-textarea {
+  width: 100%;
+  min-height: 280px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background: #FFFFFF;
+  color: var(--text-primary);
+  resize: vertical;
+  box-shadow: var(--shadow-card);
+}
+.gpt-import-textarea:focus {
+  outline: 2px solid rgba(123, 201, 160, 0.35);
+  border-color: #7BC9A0;
+}
+.gpt-import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.gpt-import-submit {
+  appearance: none;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 18px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 780;
+  background: #7BC9A0;
+  color: #06281c;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(123, 201, 160, 0.25);
+  flex: 1 1 160px;
+}
+.gpt-import-submit:active { transform: scale(0.98); }
+.gpt-import-secondary {
+  appearance: none;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  background: #FFFFFF;
+  color: var(--text-primary);
+  border: 1px solid var(--line);
+  cursor: pointer;
+}
+.gpt-import-feedback {
+  margin: 0;
+  min-height: 1.4em;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}
+.gpt-import-feedback.is-success { color: #2F7A55; }
+.gpt-import-feedback.is-error { color: #C24B47; }
+
+@media (max-width: 420px) {
+  .today-market-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .section-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

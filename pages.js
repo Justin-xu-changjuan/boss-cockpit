@@ -8,7 +8,7 @@
  */
 
 (() => {
-  const appRoutes = ['home', 'market-watch', 'tesla', 'file', 'me', 'data', 'position', 'position-input'];
+  const appRoutes = ['home', 'market-watch', 'tesla', 'file', 'me', 'data', 'position', 'position-input', 'gpt-import'];
   const routeTitles = {
     home: '老板驾驶舱',
     tesla: 'Tesla',
@@ -17,6 +17,7 @@
     data: '数据管理',
     position: '我的持仓',
     'position-input': '持仓智能录入',
+    'gpt-import': 'GPT智能录入',
     'market-watch': '行情关注'
   };
   const scrollPositions = new Map();
@@ -76,7 +77,9 @@
 
     const activeTabPage = targetPage === 'data'
       ? 'me'
-      : (['position', 'position-input'].includes(targetPage) ? 'home' : targetPage);
+      : (['position', 'position-input', 'gpt-import'].includes(targetPage)
+        ? (targetPage === 'gpt-import' ? 'market-watch' : 'home')
+        : targetPage);
     document.querySelectorAll('.nav-item').forEach(item => {
       const isActive = item.dataset.page === activeTabPage;
       item.classList.toggle('active', isActive);
@@ -477,11 +480,53 @@
     });
   }
 
+  function renderGptImportPage() {
+    const input = document.getElementById('gpt-import-input');
+    const feedback = document.getElementById('gpt-import-feedback');
+    const submit = document.getElementById('gpt-import-submit');
+    const sample = document.getElementById('gpt-import-sample');
+    const clear = document.getElementById('gpt-import-clear');
+    if (!input || !feedback || !submit) return;
+
+    if (submit.dataset.bound === '1') return;
+    submit.dataset.bound = '1';
+
+    sample?.addEventListener('click', () => {
+      input.value = window.GPTImport?.sampleFuturesJSON || '';
+      feedback.className = 'gpt-import-feedback';
+      feedback.textContent = '已填入示例，可直接点「一键更新行情」试跑。';
+    });
+
+    clear?.addEventListener('click', () => {
+      input.value = '';
+      feedback.className = 'gpt-import-feedback';
+      feedback.textContent = '已清空。';
+      input.focus();
+    });
+
+    submit.addEventListener('click', () => {
+      try {
+        if (!window.GPTImport?.apply) throw new Error('GPT 解析模块未加载。');
+        const result = window.GPTImport.apply(input.value);
+        feedback.className = 'gpt-import-feedback is-success';
+        feedback.textContent = result.message || '更新成功。';
+        notify(result.message || 'GPT 数据已更新');
+        // 稍等事件刷新后回首页看「今日行情」
+        window.setTimeout(() => {
+          window.location.hash = 'home';
+        }, 450);
+      } catch (error) {
+        feedback.className = 'gpt-import-feedback is-error';
+        feedback.textContent = `更新失败：${error.message}`;
+      }
+    });
+  }
+
   function renderPositionInputPage() {
     const panel = document.getElementById('position-input-panel');
     if (!panel) return;
     panel.innerHTML = `
-      <p class="position-input-help">只填合约代码和价格时，仅更新行情关注；方向、持仓数量、成本三项齐全时，同时新增或更新我的持仓。目标、止损和操作计划为可选持仓字段。</p>
+      <p class="position-input-help">手动录入（保留）。只填合约代码和价格时，仅更新行情关注；方向、持仓数量、成本三项齐全时，同时新增或更新我的持仓。批量更新请用「GPT智能录入」。</p>
       <form class="position-input-form" id="position-input-form" autocomplete="off">
         <div class="position-input-form-grid">
           <label class="position-input-field">
@@ -754,9 +799,22 @@
       renderProfilePage();
       renderDataPage();
       renderPositionInputPage();
+      renderGptImportPage();
     }
     if (!changedModules || changedModules.has('positions')) renderPositionPage();
-    if (!changedModules || changedModules.has('futuresData')) renderMarketWatchPage();
+    if (!changedModules || changedModules.has('futuresData') || changedModules.has('meta')) {
+      renderMarketWatchPage();
+      // 行情页副标题显示最近 GPT 更新时间
+      const sub = document.getElementById('market-watch-subtitle');
+      const meta = window.meta || {};
+      if (sub && meta.lastGPTUpdateAt) {
+        const t = new Date(meta.lastGPTUpdateAt);
+        const label = Number.isNaN(t.getTime())
+          ? meta.lastGPTUpdateAt
+          : t.toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        sub.textContent = `最近 GPT 更新：${label}`;
+      }
+    }
   }
 
   function initAppRouter() {
@@ -773,9 +831,16 @@
       renderPositionInputPage();
       window.location.hash = 'position-input';
     });
+    document.querySelector('[data-gpt-import-back]')?.addEventListener('click', () => {
+      window.location.hash = 'home';
+    });
     document.addEventListener('click', event => {
       if (event.target.closest('[data-position-preview]')) window.location.hash = 'position';
       if (event.target.closest('[data-market-watch-card]')) window.location.hash = 'market-watch';
+      if (event.target.closest('[data-gpt-import]')) {
+        renderGptImportPage();
+        window.location.hash = 'gpt-import';
+      }
     });
     document.querySelectorAll('[data-market-watch]').forEach(button => {
       button.addEventListener('click', () => {

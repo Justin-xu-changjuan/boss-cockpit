@@ -17,7 +17,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="icons/app-icon-180.png" />
   
   <title>老板驾驶舱</title>
-  <link rel="stylesheet" href="style.css?v=bg10" />
+  <link rel="stylesheet" href="style.css?v=gpt1" />
 </head>
 <body>
   <!-- ========== App 启动层 ========== -->
@@ -77,12 +77,29 @@
       <div class="section-header">
         <div>
           <h2 class="section-title" id="home-market-title">行情关注</h2>
-          <p class="section-subtitle">关注合约最新价格</p>
+          <p class="section-subtitle" id="home-market-subtitle">关注合约最新价格</p>
         </div>
-        <button class="section-action" type="button" data-market-watch aria-controls="view-market-watch">查看全部</button>
+        <div class="section-actions">
+          <button class="section-action" type="button" data-gpt-import aria-controls="view-gpt-import">GPT智能录入</button>
+          <button class="section-action" type="button" data-market-watch aria-controls="view-market-watch">查看全部</button>
+        </div>
       </div>
       <div class="home-market-grid" id="home-futures-grid">
         <!-- 由 JS 渲染，最多显示 4 条 -->
+      </div>
+    </section>
+
+    <!-- ========== 今日行情（GPT 更新后展示） ========== -->
+    <section class="section today-market-section" aria-labelledby="today-market-title">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title" id="today-market-title">今日行情</h2>
+          <p class="section-subtitle" id="today-market-subtitle">品种 · 合约 · 持仓 · 计划</p>
+        </div>
+        <span class="section-meta" id="today-market-updated">更新时间 —</span>
+      </div>
+      <div class="today-market-list" id="today-market-list">
+        <!-- 由 JS 渲染 -->
       </div>
     </section>
 
@@ -93,6 +110,7 @@
           <h2 class="section-title" id="home-position-title">我的持仓</h2>
           <p class="section-subtitle">当前持仓概览</p>
         </div>
+        <button class="section-action" type="button" data-gpt-import aria-controls="view-gpt-import">GPT智能录入</button>
       </div>
       <div class="position-list" id="position-list">
         <!-- 由 JS 渲染 -->
@@ -120,12 +138,12 @@
     </main>
   </section>
 
-  <!-- ========== 我的持仓智能录入页面 ========== -->
+  <!-- ========== 我的持仓智能录入页面（手动，保留） ========== -->
   <section class="app-view secondary-view position-input-view" id="view-position-input" data-view="position-input" hidden>
     <header class="view-header">
       <button class="view-back-button" type="button" data-position-input-back>‹ 我的持仓</button>
       <h1 class="view-title">持仓智能录入</h1>
-      <p class="view-subtitle">完整交易字段才会新增或更新持仓</p>
+      <p class="view-subtitle">手动表单 · 完整交易字段才会新增或更新持仓</p>
     </header>
     <main class="view-main">
       <section class="view-section" aria-labelledby="position-input-title">
@@ -138,18 +156,58 @@
     </main>
   </section>
 
+  <!-- ========== GPT 智能录入页面（新增，与手动并存） ========== -->
+  <section class="app-view secondary-view gpt-import-view" id="view-gpt-import" data-view="gpt-import" hidden>
+    <header class="view-header">
+      <button class="view-back-button" type="button" data-gpt-import-back>返回</button>
+      <h1 class="view-title">GPT智能录入</h1>
+      <p class="view-subtitle">粘贴结构化 JSON，一键更新行情与持仓</p>
+    </header>
+    <main class="view-main">
+      <section class="view-section" aria-labelledby="gpt-import-title">
+        <div class="view-section-heading">
+          <h2 class="view-section-title" id="gpt-import-title">粘贴GPT生成的数据</h2>
+          <span class="data-source-label">futures</span>
+        </div>
+        <div class="gpt-import-panel" id="gpt-import-panel">
+          <p class="gpt-import-help">
+            支持固定格式 JSON（可含 <code>```json</code> 代码块）。有对应合约则覆盖更新，没有则新增；历史按日期保留在本地日志。
+            手动录入入口仍保留在「我的持仓 → 智能录入」。
+          </p>
+          <label class="gpt-import-label" for="gpt-import-input">GPT 数据</label>
+          <textarea
+            class="gpt-import-textarea"
+            id="gpt-import-input"
+            spellcheck="false"
+            rows="16"
+            placeholder='粘贴例如：&#10;{&#10;  "date":"2026-08-10",&#10;  "futures":[{ "name":"螺纹钢", "contract":"RB2610", "price":"3015", ... }]&#10;}'
+          ></textarea>
+          <div class="gpt-import-actions">
+            <button class="gpt-import-submit" type="button" id="gpt-import-submit">一键更新行情</button>
+            <button class="gpt-import-secondary" type="button" id="gpt-import-sample">填入示例</button>
+            <button class="gpt-import-secondary" type="button" id="gpt-import-clear">清空</button>
+          </div>
+          <p class="gpt-import-feedback" id="gpt-import-feedback" role="status" aria-live="polite">解析成功后会自动刷新首页与行情页。</p>
+        </div>
+      </section>
+    </main>
+  </section>
+
   <!-- ========== 行情关注页面 ========== -->
   <section class="app-view secondary-view market-watch-view" id="view-market-watch" data-view="market-watch" hidden>
     <header class="view-header">
       <button class="view-back-button" type="button" data-market-watch-back>返回首页</button>
       <h1 class="view-title">行情关注</h1>
-      <p class="view-subtitle">所有关注合约的最新价格</p>
+      <p class="view-subtitle" id="market-watch-subtitle">所有关注合约的最新价格</p>
     </header>
     <main class="view-main">
       <section class="view-section" aria-labelledby="market-watch-title">
         <div class="view-section-heading">
           <h2 class="view-section-title" id="market-watch-title">关注合约</h2>
-          <button class="market-watch-add-button" type="button" data-market-add-toggle aria-expanded="false" aria-controls="market-watch-add-form">添加关注合约</button>
+          <div class="section-actions">
+            <button class="market-watch-add-button" type="button" data-gpt-import>GPT智能录入</button>
+            <button class="market-watch-add-button" type="button" data-market-add-toggle aria-expanded="false" aria-controls="market-watch-add-form">添加关注合约</button>
+          </div>
         </div>
         <form class="market-watch-add-form" id="market-watch-add-form" hidden>
           <p class="market-watch-form-help">保存后会加入行情关注。新合约尚未录入价格时显示“—”。</p>
@@ -311,12 +369,13 @@
   </nav>
 
   <!-- 数据与逻辑 -->
-  <script src="dataStore.js?v=bg10"></script>
-  <script src="futuresData.js?v=bg10"></script>
-  <script src="vehicleData.js?v=bg10"></script>
-  <script src="accountData.js?v=bg10"></script>
-  <script src="data.js?v=bg10"></script>
-  <script src="pages.js?v=bg10"></script>
-  <script src="script.js?v=bg10"></script>
+  <script src="dataStore.js?v=gpt1"></script>
+  <script src="futuresData.js?v=gpt1"></script>
+  <script src="vehicleData.js?v=gpt1"></script>
+  <script src="accountData.js?v=gpt1"></script>
+  <script src="data.js?v=gpt1"></script>
+  <script src="gptImport.js?v=gpt1"></script>
+  <script src="pages.js?v=gpt1"></script>
+  <script src="script.js?v=gpt1"></script>
 </body>
 </html>

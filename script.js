@@ -155,11 +155,30 @@
     `;
   }
 
+  function formatUpdateTime(value) {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return date.toLocaleString('zh-CN', {
+      month: 'numeric',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
   function renderHomeMarketPreview() {
     const grid = document.getElementById('home-futures-grid');
     if (!grid) return;
     const quotes = Array.isArray(window.futuresData) ? window.futuresData.slice(0, 4) : [];
     const tones = ['sand', 'lavender', 'sky', 'mint'];
+    const meta = window.meta || {};
+    const homeSub = document.getElementById('home-market-subtitle');
+    if (homeSub) {
+      homeSub.textContent = meta.lastGPTUpdateAt
+        ? `关注合约 · 更新 ${formatUpdateTime(meta.lastGPTUpdateAt)}`
+        : '关注合约最新价格';
+    }
     grid.innerHTML = quotes.length ? quotes.map((quote, index) => {
       const code = escapeHTML(quote?.code || '待补代码');
       const tone = tones[index % tones.length];
@@ -172,6 +191,84 @@
         </button>
       `;
     }).join('') : '<div class="market-watch-empty">暂无关注合约</div>';
+  }
+
+  /** 今日行情：合并行情 + 持仓，展示品种/合约/价/持仓/成本/浮盈/计划 */
+  function renderTodayMarket() {
+    const list = document.getElementById('today-market-list');
+    const updatedEl = document.getElementById('today-market-updated');
+    const subEl = document.getElementById('today-market-subtitle');
+    if (!list) return;
+
+    const quotes = Array.isArray(window.futuresData) ? window.futuresData : [];
+    const positions = Array.isArray(window.positions) ? window.positions : [];
+    const meta = window.meta || {};
+    const logs = Array.isArray(window.dailyLogs) ? window.dailyLogs : [];
+    const latestLog = logs.find(item => item.domain === 'futures') || logs[0];
+
+    const updatedAt = meta.lastGPTUpdateAt || latestLog?.updatedAt || null;
+    if (updatedEl) updatedEl.textContent = `更新时间 ${formatUpdateTime(updatedAt)}`;
+    if (subEl) {
+      subEl.textContent = latestLog?.date
+        ? `日期 ${latestLog.date} · 品种/合约/持仓/计划`
+        : '品种 · 合约 · 持仓 · 计划';
+    }
+
+    const positionByCode = new Map(
+      positions.map(item => [String(item.code || '').toUpperCase(), item])
+    );
+
+    // 优先展示：有持仓的合约 + 其余行情（最多 8 条）
+    const orderedCodes = [];
+    positions.forEach(p => {
+      const code = String(p.code || '').toUpperCase();
+      if (code && !orderedCodes.includes(code)) orderedCodes.push(code);
+    });
+    quotes.forEach(q => {
+      const code = String(q.code || '').toUpperCase();
+      if (code && !orderedCodes.includes(code)) orderedCodes.push(code);
+    });
+
+    const rows = orderedCodes.slice(0, 8).map(code => {
+      const quote = quotes.find(item => String(item.code || '').toUpperCase() === code) || {};
+      const pos = positionByCode.get(code) || {};
+      const floatingPnl = Number(pos.floatingPnl);
+      const pnlText = Number.isFinite(floatingPnl)
+        ? `${floatingPnl > 0 ? '+' : ''}¥${formatMoney(floatingPnl)}`
+        : '—';
+      const pnlClass = Number.isFinite(floatingPnl)
+        ? (floatingPnl >= 0 ? 'is-up' : 'is-down')
+        : '';
+      const direction = pos.direction || '—';
+      const qty = Number(pos.quantity);
+      const holdText = direction !== '—' || Number.isFinite(qty)
+        ? `${direction}${Number.isFinite(qty) && qty ? ` ${qty}手` : ''}`
+        : '—';
+      return `
+        <article class="today-market-card">
+          <header class="today-market-head">
+            <div>
+              <strong>${escapeHTML(quote.name || getContractName(code))}</strong>
+              <span>${escapeHTML(code)}</span>
+            </div>
+            <div class="today-market-price-block">
+              <em>最新价</em>
+              <b>${formatPrice(quote.price ?? pos.currentPrice)}</b>
+            </div>
+          </header>
+          <div class="today-market-grid">
+            <div><em>持仓</em><b>${escapeHTML(holdText)}</b></div>
+            <div><em>成本</em><b>${formatPrice(pos.cost)}</b></div>
+            <div><em>浮盈亏</em><b class="${pnlClass}">${pnlText}</b></div>
+            <div class="today-market-plan"><em>操作计划</em><b>${escapeHTML(pos.plan || quote.note || '—')}</b></div>
+          </div>
+        </article>
+      `;
+    });
+
+    list.innerHTML = rows.length
+      ? rows.join('')
+      : '<div class="today-market-empty">暂无行情。可用「GPT智能录入」一键更新。</div>';
   }
 
   function getContractName(code) {
@@ -333,6 +430,7 @@
     initHeader();
     renderAccountOverview();
     renderHomeMarketPreview();
+    renderTodayMarket();
     renderPositions();
     window.renderAppPages?.();
     window.initAppRouter?.();
@@ -341,8 +439,14 @@
     window.addEventListener('bossdatachange', event => {
       const changedModules = event.detail?.modules || [event.detail?.module].filter(Boolean);
       if (changedModules.includes('accountData')) renderAccountOverview();
-      if (changedModules.includes('futuresData')) renderHomeMarketPreview();
-      if (changedModules.includes('positions')) renderPositions();
+      if (changedModules.includes('futuresData') || changedModules.includes('meta') || changedModules.includes('dailyLogs')) {
+        renderHomeMarketPreview();
+        renderTodayMarket();
+      }
+      if (changedModules.includes('positions')) {
+        renderPositions();
+        renderTodayMarket();
+      }
       window.renderAppPages?.({ changedModules });
     });
   });
