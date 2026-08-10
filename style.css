@@ -2367,7 +2367,7 @@ body {
    覆盖层：保留结构与交互，统一视觉气质
    ========================================================= */
 :root {
-  --bg-primary: #F2F3F5; /* 参考图浅冷灰 */
+  --bg-primary: #F8F7F4; /* 米白 */
   --surface: #FFFFFF;
   --surface-solid: #FFFFFF;
   --line: #E6E8EC;
@@ -2410,7 +2410,7 @@ body::before {
 
 /* 启动页 */
 .splash-screen {
-  background: #F2F3F5 !important;
+  background: #F8F7F4 !important;
 }
 .splash-title {
   color: #2C2A26 !important;
@@ -3285,7 +3285,7 @@ textarea:focus {
   gap: 8px;
   padding: 12px 10px;
   border-radius: 16px;
-  background: rgba(242, 243, 245, 0.95);
+  background: rgba(248, 247, 244, 0.95);
   border: 1px solid var(--line);
 }
 .pos-metric {
@@ -3506,7 +3506,7 @@ textarea:focus {
   gap: 10px;
   padding: 12px;
   border-radius: 14px;
-  background: rgba(242, 243, 245, 0.9);
+  background: rgba(248, 247, 244, 0.9);
   border: 1px solid var(--line);
 }
 .today-market-grid em {
@@ -3564,7 +3564,7 @@ textarea:focus {
 }
 .gpt-import-help code {
   font-size: 12px;
-  background: rgba(242, 243, 245, 0.95);
+  background: rgba(248, 247, 244, 0.95);
   padding: 1px 6px;
   border-radius: 6px;
 }
