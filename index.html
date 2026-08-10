@@ -6,10 +6,10 @@
   
   <!-- iOS 添加到主屏幕核心配置 -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="老板驾驶舱" />
   <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="theme-color" content="#050507" />
+  <meta name="theme-color" content="#F2F3F5" />
   <meta name="format-detection" content="telephone=no" />
 
   <link rel="manifest" href="manifest.json" />
@@ -17,7 +17,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="icons/app-icon-180.png" />
   
   <title>老板驾驶舱</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=bg10" />
 </head>
 <body>
   <!-- ========== App 启动层 ========== -->
@@ -231,17 +231,36 @@
 
   <!-- ========== Tesla 页面 ========== -->
   <section class="app-view secondary-view tesla-fleet-view" id="view-tesla" data-view="tesla" hidden>
-    <header class="view-header">
-      <h1 class="view-title">Tesla</h1>
-      <p class="view-subtitle">车辆与快捷控制入口</p>
+    <header class="view-header tesla-page-header">
+      <div class="tesla-page-hero">
+        <div class="tesla-page-hero-copy">
+          <p class="tesla-page-kicker">Hi, Boss</p>
+          <h1 class="view-title">Tesla</h1>
+          <p class="view-subtitle">双车并排控制</p>
+        </div>
+        <div class="tesla-page-hero-side" aria-hidden="true">
+          <button class="tesla-page-icon-btn" type="button" tabindex="-1">🔔</button>
+          <button class="tesla-page-icon-btn" type="button" tabindex="-1">⌕</button>
+        </div>
+      </div>
+      <div class="tesla-balance-card">
+        <div class="tesla-balance-top">
+          <span>车队状态总览</span>
+          <span class="tesla-balance-eye" aria-hidden="true">◉</span>
+        </div>
+        <div class="tesla-balance-value">2 <small>辆在线</small></div>
+        <div class="tesla-balance-meta">
+          <span class="tesla-balance-up">平均电量 71%</span>
+          <span class="tesla-balance-tag">+就绪</span>
+        </div>
+      </div>
     </header>
     <main class="view-main">
-      <section class="view-section" aria-labelledby="tesla-fleet-title">
-        <div class="view-section-heading">
+      <section class="view-section tesla-soft-section" aria-labelledby="tesla-fleet-title">
+        <div class="view-section-heading tesla-section-heading">
           <h2 class="view-section-title" id="tesla-fleet-title">我的车辆</h2>
-          <span class="data-source-label">vehicleData</span>
         </div>
-        <div class="tesla-fleet-grid" id="tesla-fleet-list"></div>
+        <div class="tesla-fleet-grid tesla-fleet-grid-soft" id="tesla-fleet-list"></div>
       </section>
     </main>
   </section>
@@ -292,12 +311,12 @@
   </nav>
 
   <!-- 数据与逻辑 -->
-  <script src="dataStore.js"></script>
-  <script src="futuresData.js"></script>
-  <script src="vehicleData.js"></script>
-  <script src="accountData.js"></script>
-  <script src="data.js"></script>
-  <script src="pages.js"></script>
-  <script src="script.js"></script>
+  <script src="dataStore.js?v=bg10"></script>
+  <script src="futuresData.js?v=bg10"></script>
+  <script src="vehicleData.js?v=bg10"></script>
+  <script src="accountData.js?v=bg10"></script>
+  <script src="data.js?v=bg10"></script>
+  <script src="pages.js?v=bg10"></script>
+  <script src="script.js?v=bg10"></script>
 </body>
 </html>

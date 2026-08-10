@@ -109,18 +109,81 @@
     const list = document.getElementById('tesla-fleet-list');
     if (!list) return;
     const vehicles = Array.isArray(window.vehicleData) ? window.vehicleData : [];
-    list.innerHTML = vehicles.length ? vehicles.map(vehicle => `
-      <button class="tesla-fleet-card tesla-${safeClassToken(vehicle.tone)}" type="button" data-vehicle="${escapeHTML(vehicle.id)}">
-        <span class="tesla-fleet-mark" aria-hidden="true">${escapeHTML(vehicle.mark || 'T')}</span>
-        <span class="tesla-fleet-copy">
-          <strong>${escapeHTML(vehicle.shortName || vehicle.name || 'Tesla')}</strong>
-          <span>${escapeHTML(vehicle.colorName || '')} · ${escapeHTML(vehicle.status || '状态模拟')}</span>
-        </span>
-        <span class="tesla-fleet-arrow" aria-hidden="true">↗</span>
-      </button>
-    `).join('') : '<div class="tesla-fleet-empty">暂无车辆数据</div>';
-    list.querySelectorAll('[data-vehicle]').forEach(button => {
-      button.addEventListener('click', () => openTeslaControl(button.dataset.vehicle));
+    if (!vehicles.length) {
+      list.innerHTML = '<div class="tesla-fleet-empty">暂无车辆数据</div>';
+      return;
+    }
+
+    // 双列并排：全部控制直接展示，无二级「完整控制页」
+    const maxControls = vehicles.reduce((n, v) => Math.max(n, (v.controls || []).length), 0);
+    list.classList.add('tesla-fleet-grid-soft');
+    list.innerHTML = vehicles.map((vehicle, index) => {
+      const tone = safeClassToken(vehicle.tone, index === 0 ? 'white' : 'black');
+      const palette = index === 0 ? 'mint' : 'lavender';
+      const controls = Array.isArray(vehicle.controls) ? vehicle.controls : [];
+      const battery = tone === 'white' ? 78 : 64;
+      const range = tone === 'white' ? '312' : '268';
+      const temp = tone === 'white' ? '22.5' : '21.0';
+      // 用空位补齐控制格数，保证两卡同高
+      const pads = Math.max(0, maxControls - controls.length);
+      return `
+        <article class="tesla-soft-card tesla-tone-${tone} tesla-palette-${palette}" data-vehicle-card="${escapeHTML(vehicle.id)}">
+          <header class="tesla-soft-head">
+            <div class="tesla-soft-mark" aria-hidden="true">${escapeHTML(vehicle.mark || 'T')}</div>
+            <div class="tesla-soft-titles">
+              <strong>${escapeHTML(vehicle.shortName || vehicle.name || 'Tesla')}</strong>
+              <span>${escapeHTML(vehicle.colorName || '车身')}</span>
+            </div>
+            <span class="tesla-soft-badge"><i aria-hidden="true"></i>在线</span>
+          </header>
+
+          <div class="tesla-soft-hero">
+            <div class="tesla-soft-hero-main">
+              <em>预估续航</em>
+              <strong>${range}<small>km</small></strong>
+              <span class="tesla-soft-pill">+${battery === 78 ? '2.4' : '1.1'}%</span>
+            </div>
+            <div class="tesla-soft-hero-side">
+              <span>电量 <b>${battery}%</b></span>
+              <span>座舱 <b>${temp}°</b></span>
+              <span>车锁 <b>已锁</b></span>
+            </div>
+          </div>
+
+          <div class="tesla-soft-climate">
+            <div class="tesla-soft-climate-copy">
+              <span>电池健康</span>
+              <strong>${battery}%</strong>
+            </div>
+            <div class="tesla-soft-climate-bar" aria-hidden="true">
+              <span style="width:${battery}%"></span>
+            </div>
+          </div>
+
+          <div class="tesla-soft-controls-label">全部控制</div>
+          <div class="tesla-soft-controls" role="group" aria-label="${escapeHTML(vehicle.shortName || '车辆')}全部控制">
+            ${controls.map(command => `
+              <button class="tesla-soft-btn" type="button"
+                data-vehicle-id="${escapeHTML(vehicle.id)}"
+                data-command="${escapeHTML(command.id)}">
+                <span class="tesla-soft-btn-ico" aria-hidden="true">${escapeHTML(command.icon || '•')}</span>
+                <span>${escapeHTML(command.label)}</span>
+              </button>
+            `).join('')}
+            ${Array.from({ length: pads }).map(() => `
+              <div class="tesla-soft-btn tesla-soft-btn-pad" aria-hidden="true"></div>
+            `).join('')}
+          </div>
+        </article>
+      `;
+    }).join('');
+
+    list.querySelectorAll('[data-command][data-vehicle-id]').forEach(button => {
+      button.addEventListener('click', () => {
+        const vehicle = getTeslaVehicle(button.dataset.vehicleId);
+        if (!vehicle) return;
+        handleTeslaCommand(button, vehicle);
+      });
     });
   }
 
@@ -167,16 +230,24 @@
     const feedback = document.getElementById('tesla-feedback');
     const command = (vehicle.controls || []).find(item => item.id === button.dataset.command);
     const shortcutName = command?.shortcut;
-    if (!feedback || !command || !shortcutName) return;
+    if (!command || !shortcutName) return;
+
+    const scope = button.closest('[data-vehicle-card], .tesla-command-grid, .tesla-control-main') || document;
+    const relatedButtons = () => scope.querySelectorAll(
+      '.tesla-command-button, .tesla-soft-btn, .tesla-soft-chip'
+    );
 
     window.clearTimeout(teslaCommandTimer);
-    document.querySelectorAll('.tesla-command-button').forEach(item => {
+    relatedButtons().forEach(item => {
       item.disabled = true;
       item.classList.remove('is-complete');
     });
     button.classList.add('is-sending');
-    feedback.className = 'tesla-feedback is-sending';
-    feedback.innerHTML = `<span class="tesla-feedback-spinner" aria-hidden="true"></span>正在执行快捷指令…`;
+    if (feedback) {
+      feedback.className = 'tesla-feedback is-sending';
+      feedback.innerHTML = `<span class="tesla-feedback-spinner" aria-hidden="true"></span>正在执行快捷指令…`;
+    }
+    notify(`${vehicle.shortName || vehicle.name} · ${command.label}…`);
 
     let shortcutLeftPage = false;
     const cleanupShortcutListeners = () => {
@@ -185,7 +256,7 @@
       window.removeEventListener('pageshow', handleShortcutPageShow);
     };
     const unlockButtons = () => {
-      document.querySelectorAll('.tesla-command-button').forEach(item => {
+      relatedButtons().forEach(item => {
         item.disabled = false;
       });
     };
@@ -194,15 +265,21 @@
       button.classList.remove('is-sending');
       button.classList.add('is-complete');
       unlockButtons();
-      feedback.className = 'tesla-feedback is-complete';
-      feedback.innerHTML = `<span aria-hidden="true">✓</span>${escapeHTML(vehicle.name)} · ${escapeHTML(command.label)}执行完成`;
+      if (feedback) {
+        feedback.className = 'tesla-feedback is-complete';
+        feedback.innerHTML = `<span aria-hidden="true">✓</span>${escapeHTML(vehicle.name)} · ${escapeHTML(command.label)}执行完成`;
+      }
+      notify(`${vehicle.shortName || vehicle.name} · ${command.label}完成`);
     };
     const showShortcutMissing = () => {
       cleanupShortcutListeners();
       button.classList.remove('is-sending');
       unlockButtons();
-      feedback.className = 'tesla-feedback is-error';
-      feedback.innerHTML = `<span aria-hidden="true">!</span>请先创建对应快捷指令：${escapeHTML(shortcutName)}`;
+      if (feedback) {
+        feedback.className = 'tesla-feedback is-error';
+        feedback.innerHTML = `<span aria-hidden="true">!</span>请先创建对应快捷指令：${escapeHTML(shortcutName)}`;
+      }
+      notify(`请先创建快捷指令：${shortcutName}`);
     };
     const handleShortcutVisibility = () => {
       if (document.visibilityState === 'hidden') {
@@ -550,15 +627,29 @@
     const grid = document.getElementById('market-watch-grid');
     if (!grid) return;
     const quotes = Array.isArray(window.futuresData) ? window.futuresData : [];
-    grid.innerHTML = quotes.length ? quotes.map(quote => `
+    const tones = ['sand', 'lavender', 'sky', 'mint', 'peach'];
+    grid.innerHTML = quotes.length ? quotes.map((quote, index) => {
+      const tone = tones[index % tones.length];
+      const spark = typeof window.buildSparkline === 'function'
+        ? window.buildSparkline(`${quote?.code || 'x'}-${quote?.price || 0}`, {
+            className: 'card-spark card-spark-market',
+            tone,
+            width: 200,
+            height: 68,
+            points: 15
+          })
+        : '';
+      return `
       <article class="market-watch-card">
+        ${spark}
         <div class="market-watch-card-head">
           <div><strong>${escapeHTML(quote?.code || '待补代码')}</strong><span>${escapeHTML(quote?.name || '关注合约')}</span></div>
           <span class="market-watch-unit">${escapeHTML(quote?.unit || '价格')}</span>
         </div>
         <strong class="market-watch-price">${quote?.price !== null && quote?.price !== undefined && quote?.price !== '' && Number.isFinite(Number(quote.price)) ? formatPagePrice(Number(quote.price)) : '—'}</strong>
       </article>
-    `).join('') : '<div class="market-watch-empty">暂无关注合约</div>';
+    `;
+    }).join('') : '<div class="market-watch-empty">暂无关注合约</div>';
   }
 
   function renderPositionPage() {
@@ -592,8 +683,18 @@
       const pnlClass = floatingPnl >= 0 ? 'position-pnl-up' : 'position-pnl-down';
       const direction = String(position.direction || '').toLowerCase();
       const directionClass = ['空', '空头', 'short', 'sell'].includes(direction) ? 'short' : 'long';
+      const spark = typeof window.buildSparkline === 'function'
+        ? window.buildSparkline(`${code}-${position.currentPrice}-${floatingPnl}`, {
+            className: 'card-spark card-spark-position',
+            tone: floatingPnl < 0 ? 'peach' : 'mint',
+            width: 320,
+            height: 80,
+            points: 18
+          })
+        : '';
       return `
         <article class="position-card position-page-card">
+          ${spark}
           <div class="position-contract-meta">
             <div class="position-field"><span class="position-label">合约名称</span><strong class="position-value">${escapeHTML(name)}</strong></div>
             <div class="position-field"><span class="position-label">合约代码</span><strong class="position-value">${escapeHTML(code)}</strong></div>

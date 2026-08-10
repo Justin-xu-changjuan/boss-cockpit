@@ -7,7 +7,7 @@
 ```
 boss-cockpit/
 ├── index.html      # 主页面
-├── style.css       # 样式（深色高级风格）
+├── style.css       # 样式（柔和浅色 Rutinly 风格）
 ├── script.js       # 主逻辑与交互
 ├── dataStore.js    # 统一数据层、localStorage、AI JSON 导入
 ├── pages.js        # 页面路由与各模块页面渲染

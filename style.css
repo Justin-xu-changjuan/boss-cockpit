@@ -2361,3 +2361,1073 @@ body {
   }
 
 }
+
+/* =========================================================
+   Rutinly Soft Theme · 柔和治愈浅色（对齐智能家居控制面板）
+   覆盖层：保留结构与交互，统一视觉气质
+   ========================================================= */
+:root {
+  --bg-primary: #F2F3F5; /* 参考图浅冷灰 */
+  --surface: #FFFFFF;
+  --surface-solid: #FFFFFF;
+  --line: #E6E8EC;
+  --line-strong: #D9DDE3;
+  --text-primary: #2C2A26;
+  --text-secondary: #8A857C;
+  --text-tertiary: #A39E94;
+  --accent: #5FA88A;
+  --accent-soft: #D8F0E3;
+  --accent-tesla: #D9896E;
+  --success: #3F9B6A;
+  --danger: #D96B66;
+  --radius-md: 22px;
+  --shadow-card: 0 8px 24px rgba(44, 42, 38, 0.06);
+  --card-bg: #FFFFFF;
+  --card-border: #EDE9E2;
+  --glass-surface: #FFFFFF;
+  --blur: none;
+  --mint: #D8F0E3;
+  --yellow: #F7E8A8;
+  --lavender: #E5DFF5;
+  --sky: #D9ECF8;
+  --peach: #F8E0D2;
+  --sand: #F0EBE3;
+}
+
+html {
+  color-scheme: light;
+  background: var(--bg-primary);
+}
+
+body {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary);
+}
+
+body::before {
+  display: none;
+}
+
+/* 启动页 */
+.splash-screen {
+  background: #F2F3F5 !important;
+}
+.splash-title {
+  color: #2C2A26 !important;
+}
+.splash-subtitle {
+  color: #8A857C !important;
+  letter-spacing: 0.12em !important;
+}
+.splash-mark-ring-outer {
+  border-color: #E4DFD6 !important;
+  border-right-color: #7BC9A0 !important;
+  border-top-color: #C9B8F0 !important;
+}
+.splash-mark-ring-inner {
+  border-color: #F0EBE3 !important;
+}
+.splash-mark-light {
+  background: #7BC9A0 !important;
+  border-color: rgba(123, 201, 160, 0.25) !important;
+  box-shadow: 0 0 16px rgba(123, 201, 160, 0.35) !important;
+}
+
+/* 顶栏 */
+.app-header {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.app-title {
+  background: none !important;
+  color: var(--text-primary) !important;
+  -webkit-text-fill-color: currentColor !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+}
+.app-subtitle {
+  color: var(--text-tertiary) !important;
+  letter-spacing: 0.08em !important;
+  font-weight: 600 !important;
+}
+.welcome-text,
+.header-date,
+.header-time {
+  color: var(--text-secondary) !important;
+}
+.header-status-line {
+  background: var(--mint) !important;
+  border: none !important;
+  color: #2F7A55 !important;
+  border-radius: 999px !important;
+  padding: 8px 12px !important;
+}
+.header-status-dot {
+  background: #5BB98A !important;
+  box-shadow: 0 0 0 3px rgba(91, 185, 138, 0.2) !important;
+}
+.command-mark {
+  background: #FFFFFF !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+.command-mark-light {
+  background: #7BC9A0 !important;
+}
+
+/* 分区标题 */
+.section-title,
+.view-title,
+.view-section-title {
+  color: var(--text-primary) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+.section-subtitle,
+.view-subtitle {
+  color: var(--text-secondary) !important;
+}
+.section-action {
+  color: #3D7A5C !important;
+  background: var(--mint) !important;
+  border-radius: 999px !important;
+  font-weight: 650 !important;
+}
+.section-action:active {
+  background: #c6e8d6 !important;
+}
+
+/* 通用卡片 */
+.position-card,
+.account-overview-card,
+.home-market-card,
+.market-card,
+.file-card,
+.settings-card,
+.me-card,
+.tesla-vehicle-card,
+.view-section,
+.data-import-panel,
+.position-input-panel {
+  background: #FFFFFF !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-card) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: var(--text-primary) !important;
+}
+
+.position-card::before,
+.account-overview-card::before,
+.home-market-card::before {
+  display: none !important;
+}
+
+.position-name,
+.position-value,
+.account-equity-value,
+.market-price,
+.file-name {
+  color: var(--text-primary) !important;
+}
+
+.position-label,
+.account-label,
+.market-code,
+.file-meta,
+.data-source-label {
+  color: var(--text-secondary) !important;
+}
+
+.position-direction.long {
+  background: var(--mint) !important;
+  color: #2F7A55 !important;
+}
+.position-direction.short {
+  background: #FDE8E8 !important;
+  color: #B42318 !important;
+}
+
+/* 账户总览柔和强调 */
+.account-overview-card {
+  background: linear-gradient(160deg, #FFFFFF 0%, #F3FBF6 100%) !important;
+}
+.account-equity-value {
+  color: #2F7A55 !important;
+}
+
+/* 行情色块点缀（Rutinly 色卡） */
+.home-market-grid > *:nth-child(4n + 1),
+.market-list > *:nth-child(4n + 1) {
+  background: #FFF9E8 !important;
+}
+.home-market-grid > *:nth-child(4n + 2),
+.market-list > *:nth-child(4n + 2) {
+  background: #F3EEFC !important;
+}
+.home-market-grid > *:nth-child(4n + 3),
+.market-list > *:nth-child(4n + 3) {
+  background: #EAF6FC !important;
+}
+.home-market-grid > *:nth-child(4n + 4),
+.market-list > *:nth-child(4n + 4) {
+  background: #F3FBF6 !important;
+}
+
+/* 次级页顶栏 */
+.view-header,
+.tesla-control-header {
+  background: transparent !important;
+  border-bottom: none !important;
+}
+.view-back-button,
+.tesla-back-button {
+  background: #FFFFFF !important;
+  border: 1px solid var(--line) !important;
+  color: var(--text-primary) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--shadow-card) !important;
+}
+.tesla-header-status {
+  background: var(--peach) !important;
+  color: #9A5B3C !important;
+  border: none !important;
+}
+
+/* 按钮 */
+button.page-action,
+.data-import-button,
+.position-input-button,
+.tesla-command-button,
+.primary-button {
+  background: #7BC9A0 !important;
+  color: #06281c !important;
+  border: none !important;
+  border-radius: 14px !important;
+  font-weight: 700 !important;
+  box-shadow: 0 8px 18px rgba(123, 201, 160, 0.25) !important;
+}
+.data-import-secondary,
+.secondary-button {
+  background: var(--sand) !important;
+  color: var(--text-primary) !important;
+  border: none !important;
+  border-radius: 14px !important;
+}
+
+/* Tesla 控制 */
+.tesla-command-grid button,
+.tesla-command-button {
+  background: #FFFFFF !important;
+  border: 1px solid var(--line) !important;
+  color: var(--text-primary) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--shadow-card) !important;
+}
+.tesla-control-details {
+  background: #FFFFFF !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+.tesla-control-details summary {
+  color: var(--text-primary) !important;
+}
+.tesla-vehicle-card {
+  background: linear-gradient(160deg, #FFFFFF, #EEF7FF) !important;
+}
+
+/* 设置行 / 我的 */
+.settings-row,
+.me-list-item {
+  background: #FFFFFF !important;
+  border-color: var(--line) !important;
+  color: var(--text-primary) !important;
+}
+
+/* 输入框 */
+input,
+textarea,
+select {
+  background: #FFFFFF !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 14px !important;
+}
+input:focus,
+textarea:focus {
+  outline: 2px solid rgba(123, 201, 160, 0.35) !important;
+  border-color: #7BC9A0 !important;
+}
+
+/* 底部导航 · Rutinly 风格 */
+.bottom-nav {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-top: 1px solid var(--line) !important;
+  box-shadow: 0 -4px 20px rgba(44, 42, 38, 0.04) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+}
+.nav-item {
+  color: var(--text-tertiary) !important;
+  background: transparent !important;
+  border-radius: 14px !important;
+}
+.nav-item.active {
+  color: #3D7A5C !important;
+  background: transparent !important;
+  font-weight: 700 !important;
+}
+.nav-item.active::after {
+  background: #7BC9A0 !important;
+  width: 18px !important;
+  height: 3px !important;
+  bottom: 4px !important;
+}
+.nav-label {
+  font-weight: 650 !important;
+}
+
+/* Toast */
+.toast {
+  background: rgba(44, 42, 38, 0.92) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 999px !important;
+  box-shadow: 0 10px 30px rgba(44, 42, 38, 0.18) !important;
+}
+
+/* 涨跌色保持可读 */
+.pnl-positive,
+.is-up,
+.price-up {
+  color: #2F7A55 !important;
+}
+.pnl-negative,
+.is-down,
+.price-down {
+  color: #C24B47 !important;
+}
+
+/* 滚动与选中 */
+::selection {
+  background: rgba(123, 201, 160, 0.28);
+}
+
+/* =========================================================
+   Tesla 页 · 明快双色卡片（参考 fintech 配色）
+   mint / yellow / sky / lavender
+   ========================================================= */
+.tesla-page-header {
+  padding-bottom: 6px !important;
+}
+.tesla-page-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.tesla-page-kicker {
+  margin: 0 0 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2C2A26;
+}
+.tesla-page-hero .view-title {
+  margin: 0;
+  font-size: 28px !important;
+}
+.tesla-page-hero .view-subtitle {
+  margin-top: 2px;
+  color: #8A857C !important;
+}
+.tesla-page-hero-side {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.tesla-page-icon-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 14px;
+  background: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(44, 42, 38, 0.06);
+  font-size: 16px;
+  cursor: default;
+}
+
+/* 顶部总览卡 · 柔和玫粉大卡 */
+.tesla-balance-card {
+  background: #F0C9C4;
+  border-radius: 22px;
+  padding: 16px 16px 14px;
+  box-shadow: 0 10px 28px rgba(196, 120, 120, 0.16);
+  margin-bottom: 4px;
+  position: relative;
+  overflow: hidden;
+}
+.tesla-balance-card::before {
+  content: '';
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28);
+  right: -30px;
+  top: -40px;
+  pointer-events: none;
+}
+.tesla-balance-card::after {
+  content: '';
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  right: 40px;
+  bottom: -30px;
+  pointer-events: none;
+}
+.tesla-balance-top,
+.tesla-balance-value,
+.tesla-balance-meta {
+  position: relative;
+  z-index: 1;
+}
+.tesla-balance-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 650;
+  color: rgba(90, 50, 50, 0.62);
+  margin-bottom: 6px;
+}
+.tesla-balance-eye {
+  opacity: 0.55;
+  font-size: 14px;
+}
+.tesla-balance-value {
+  font-size: 34px;
+  font-weight: 820;
+  letter-spacing: -0.04em;
+  color: #2A1F1F;
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+.tesla-balance-value small {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0;
+  margin-left: 4px;
+  color: rgba(42, 31, 31, 0.7);
+}
+.tesla-balance-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.tesla-balance-up {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8A4A4A;
+}
+.tesla-balance-tag {
+  display: inline-flex;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #2A1F1F;
+  font-size: 11px;
+  font-weight: 780;
+}
+
+.tesla-section-heading {
+  margin-bottom: 12px;
+}
+.tesla-section-heading .data-source-label {
+  display: none;
+}
+
+.tesla-soft-section {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.tesla-fleet-grid-soft,
+.tesla-fleet-grid.tesla-fleet-grid-soft {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+  align-items: stretch;
+}
+
+/* 车辆大卡 */
+.tesla-soft-card {
+  border: none;
+  border-radius: 22px;
+  box-shadow: 0 10px 28px rgba(44, 42, 38, 0.08);
+  padding: 14px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+.tesla-soft-card::before {
+  content: '';
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  right: -28px;
+  top: -36px;
+  pointer-events: none;
+  opacity: 0.55;
+}
+.tesla-palette-mint {
+  background: #C5EBE8; /* Model X · 天青蓝 */
+}
+.tesla-palette-mint::before {
+  background: rgba(255, 255, 255, 0.45);
+}
+.tesla-palette-lavender {
+  background: #D9D4F7; /* Model 3 · 浅紫 */
+}
+.tesla-palette-lavender::before {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.tesla-soft-head,
+.tesla-soft-hero,
+.tesla-soft-climate,
+.tesla-soft-controls-label,
+.tesla-soft-controls {
+  position: relative;
+  z-index: 1;
+}
+
+.tesla-soft-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tesla-soft-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  font-weight: 820;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.72);
+  color: #1A1A1A;
+  box-shadow: 0 4px 12px rgba(44, 42, 38, 0.06);
+}
+
+.tesla-soft-titles {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tesla-soft-titles strong {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #1A1A1A;
+}
+.tesla-soft-titles span {
+  font-size: 11px;
+  color: rgba(26, 26, 26, 0.55);
+  font-weight: 650;
+}
+
+.tesla-soft-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #FFE566;
+  color: #1A1A1A;
+  font-size: 10px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.tesla-soft-badge i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1A1A1A;
+  display: inline-block;
+}
+
+/* 续航主数字区 */
+.tesla-soft-hero {
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 18px;
+  padding: 12px 12px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tesla-soft-hero-main em {
+  display: block;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 650;
+  color: rgba(26, 26, 26, 0.55);
+  margin-bottom: 2px;
+}
+.tesla-soft-hero-main strong {
+  display: inline-block;
+  font-size: 28px;
+  font-weight: 820;
+  letter-spacing: -0.04em;
+  color: #1A1A1A;
+  line-height: 1;
+}
+.tesla-soft-hero-main small {
+  font-size: 13px;
+  font-weight: 700;
+  margin-left: 2px;
+  color: rgba(26, 26, 26, 0.55);
+}
+.tesla-soft-pill {
+  display: inline-flex;
+  margin-left: 6px;
+  vertical-align: middle;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #FFE566;
+  color: #1A1A1A;
+  font-size: 10px;
+  font-weight: 800;
+}
+.tesla-soft-hero-side {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.tesla-soft-hero-side span {
+  font-size: 11px;
+  font-weight: 650;
+  color: rgba(26, 26, 26, 0.55);
+}
+.tesla-soft-hero-side b {
+  color: #1A1A1A;
+  font-weight: 780;
+}
+
+.tesla-soft-climate {
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 14px;
+  padding: 10px 10px 11px;
+}
+.tesla-soft-climate-copy {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+.tesla-soft-climate-copy span {
+  font-size: 11px;
+  color: rgba(26, 26, 26, 0.55);
+  font-weight: 650;
+}
+.tesla-soft-climate-copy strong {
+  font-size: 16px;
+  font-weight: 800;
+  color: #1A1A1A;
+  letter-spacing: -0.02em;
+}
+.tesla-soft-climate-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(26, 26, 26, 0.08);
+  overflow: hidden;
+}
+.tesla-soft-climate-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: #1A1A1A;
+}
+
+.tesla-soft-controls-label {
+  font-size: 11px;
+  font-weight: 750;
+  color: rgba(26, 26, 26, 0.5);
+  letter-spacing: 0.02em;
+  margin-top: 2px;
+}
+
+.tesla-soft-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: auto;
+}
+.tesla-soft-btn {
+  appearance: none;
+  border: none;
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: 16px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font: inherit;
+  color: #1A1A1A;
+  box-shadow: 0 4px 12px rgba(44, 42, 38, 0.05);
+  min-height: 76px;
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+.tesla-soft-btn:active {
+  transform: scale(0.97);
+  background: #FFFFFF;
+}
+.tesla-soft-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.tesla-soft-btn-pad {
+  visibility: hidden;
+  pointer-events: none;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+.tesla-soft-btn-ico {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.88);
+  color: #1A1A1A;
+}
+.tesla-palette-mint .tesla-soft-btn-ico {
+  background: #FFFFFF;
+  color: #1A5C5A;
+}
+.tesla-palette-lavender .tesla-soft-btn-ico {
+  background: #FFE566;
+  color: #1A1A1A;
+}
+.tesla-soft-btn > span:last-child {
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.tesla-soft-btn.is-sending .tesla-soft-btn-ico {
+  animation: tesla-command-pulse 760ms ease-in-out infinite;
+}
+.tesla-soft-btn.is-complete {
+  background: #FFFFFF;
+  box-shadow: 0 0 0 2px rgba(26, 26, 26, 0.12);
+}
+
+@media (max-width: 360px) {
+  .tesla-fleet-grid-soft,
+  .tesla-fleet-grid.tesla-fleet-grid-soft {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (min-width: 520px) {
+  .tesla-soft-card {
+    padding: 16px;
+    gap: 14px;
+  }
+  .tesla-soft-controls {
+    gap: 10px;
+  }
+  .tesla-soft-btn {
+    min-height: 84px;
+  }
+}
+
+/* —— 卡片内柔和线状图装饰 —— */
+.account-overview-card,
+.home-market-card,
+.home-position-card,
+.position-card,
+.market-watch-card {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.card-spark {
+  position: absolute !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+  display: block !important;
+  opacity: 1 !important;
+}
+
+.card-spark-account {
+  right: 8px !important;
+  top: 10px !important;
+  width: min(52%, 220px) !important;
+  height: 92px !important;
+}
+
+.card-spark-market {
+  right: 4px !important;
+  bottom: 4px !important;
+  width: 78% !important;
+  height: 64px !important;
+}
+
+.card-spark-position {
+  right: 8px !important;
+  bottom: 8px !important;
+  width: min(48%, 200px) !important;
+  height: 76px !important;
+  opacity: 0.88 !important;
+}
+
+.account-overview-card > *:not(.card-spark),
+.home-market-card > *:not(.card-spark),
+.position-card > *:not(.card-spark),
+.market-watch-card > *:not(.card-spark) {
+  position: relative;
+  z-index: 3;
+}
+
+/* 行情卡略增高，给 sparkline 留白 */
+.home-market-card,
+.market-watch-card {
+  min-height: 148px !important;
+  padding-bottom: 18px !important;
+}
+
+.home-position-card {
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  padding: 18px 16px 16px !important;
+  text-align: left !important;
+}
+
+/* 持仓卡新布局 */
+.pos-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.pos-top-left { min-width: 0; }
+.pos-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.pos-subname {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 550;
+}
+.pos-pnl {
+  text-align: right;
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: var(--mint);
+}
+.pos-pnl.position-pnl-down {
+  background: #FDE8E8;
+}
+.pos-pnl-label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.pos-pnl strong {
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: #2F7A55;
+}
+.pos-pnl.position-pnl-down strong {
+  color: #C24B47;
+}
+
+.pos-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px 10px;
+  border-radius: 16px;
+  background: rgba(242, 243, 245, 0.95);
+  border: 1px solid var(--line);
+}
+.pos-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.pos-metric .position-label {
+  font-size: 11px !important;
+}
+.pos-metric .position-value {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+
+/* 区间条：止损—成本—现价—目标 */
+.pos-range {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pos-range-track {
+  position: relative;
+  height: 12px;
+  border-radius: 999px;
+  background: #EDE9E2;
+  overflow: visible;
+}
+/* 止损→目标 整段浅色区间 */
+.pos-range-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: rgba(123, 201, 160, 0.22);
+  min-width: 4px;
+}
+.pos-range-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #A8D8C0, #5FA88A);
+  min-width: 4px;
+  z-index: 1;
+}
+.pos-range-fill.is-short {
+  background: linear-gradient(90deg, #F0C4B8, #D9896E);
+}
+.home-position-card .pos-range-zone {
+  background: rgba(123, 201, 160, 0.28);
+}
+.pos-range-mark {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(44, 42, 38, 0.18);
+  z-index: 2;
+}
+.pos-range-mark.stop { background: #D96B66; }
+.pos-range-mark.cost { background: #C4B49A; width: 8px; height: 8px; }
+.pos-range-mark.price { background: #2C2A26; width: 12px; height: 12px; }
+.pos-range-mark.target { background: #5FA88A; }
+.pos-range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.pos-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pos-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 8px rgba(44, 42, 38, 0.04);
+  max-width: 100%;
+}
+.pos-chip em {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pos-chip strong {
+  font-size: 12px;
+  font-weight: 720;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.pos-chip.plan {
+  flex: 1 1 100%;
+  background: #F3FBF6;
+  border-color: #D8F0E3;
+}
+.pos-chip.plan strong {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 首页持仓卡弱化旧 grid，避免双布局冲突 */
+.home-position-card .position-grid {
+  display: none !important;
+}
+.home-position-card .position-header {
+  margin-bottom: 0;
+}
+.home-position-card .card-spark-position {
+  opacity: 0.4 !important;
+  height: 64px !important;
+  bottom: 52px !important;
+  left: 8% !important;
+  right: 4% !important;
+  width: auto !important;
+  max-width: none !important;
+}
+
+/* 账户卡右侧给曲线留空间 */
+.account-equity-row {
+  align-items: flex-start !important;
+  gap: 12px;
+  padding-right: min(46%, 200px);
+}
+
+.account-equity-value {
+  position: relative;
+  z-index: 3;
+}

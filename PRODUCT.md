@@ -14,7 +14,7 @@ Boss Cockpit is a personal executive command center. It turns account, position,
 
 ## Brand Personality
 
-Calm, decisive, premium. The product should feel controlled and technically precise, with the confidence of a native iPhone utility and the focus of a high-end vehicle control surface.
+Calm, gentle, premium. Soft Rutinly-like wellness aesthetic: warm off-white backgrounds, large rounded cards, pastel accents (mint / lavender / sky / peach), light shadows, and friendly hierarchy. Still decisive for executive scanning, but never dark-tech or high-contrast neon.
 
 ## Anti-references
 
