@@ -18,7 +18,7 @@
     position: '我的持仓',
     'position-input': '持仓智能录入',
     'gpt-import': 'GPT智能录入',
-    'market-watch': '行情关注'
+    'market-watch': '市场观察'
   };
   const scrollPositions = new Map();
   let teslaCommandTimer = null;
@@ -671,12 +671,37 @@
   function renderMarketWatchPage() {
     const grid = document.getElementById('market-watch-grid');
     if (!grid) return;
-    const quotes = Array.isArray(window.futuresData) ? window.futuresData : [];
+    // 市场观察：排除已持仓合约，避免与「今日行情」重复
+    const held = new Set(
+      (Array.isArray(window.positions) ? window.positions : [])
+        .filter(p => {
+          const qty = Number(p?.quantity);
+          const dir = String(p?.direction || '').trim();
+          return (Number.isFinite(qty) && qty > 0) || Boolean(dir);
+        })
+        .map(p => String(p.code || '').trim().toUpperCase())
+        .filter(Boolean)
+    );
+    const quotes = (Array.isArray(window.futuresData) ? window.futuresData : [])
+      .filter(q => {
+        const code = String(q?.code || '').trim().toUpperCase();
+        return code && !held.has(code);
+      });
     const tones = ['sand', 'lavender', 'sky', 'mint', 'peach'];
+    const formatChange = change => {
+      if (change === null || change === undefined || change === '') return null;
+      const text = String(change).trim();
+      if (!text || text === '—' || text === '-') return null;
+      const num = Number(text.replace(/%/g, '').replace(/,/g, ''));
+      const up = Number.isFinite(num) ? num >= 0 : !text.startsWith('-');
+      return { text, up };
+    };
     grid.innerHTML = quotes.length ? quotes.map((quote, index) => {
       const tone = tones[index % tones.length];
+      const code = escapeHTML(quote?.code || '待补代码');
+      const name = escapeHTML(quote?.name || '观察品种');
       const spark = typeof window.buildSparkline === 'function'
-        ? window.buildSparkline(`${quote?.code || 'x'}-${quote?.price || 0}`, {
+        ? window.buildSparkline(`${quote?.code || 'x'}-${quote?.price || 0}-${quote?.change || ''}`, {
             className: 'card-spark card-spark-market',
             tone,
             width: 200,
@@ -684,17 +709,25 @@
             points: 15
           })
         : '';
+      const ch = formatChange(quote?.change);
+      const changeHtml = ch
+        ? `<span class="market-watch-change ${ch.up ? 'is-up' : 'is-down'}">${escapeHTML(ch.text)}</span>`
+        : `<span class="market-watch-change is-flat">—</span>`;
+      const priceText = quote?.price !== null && quote?.price !== undefined && quote?.price !== '' && Number.isFinite(Number(quote.price))
+        ? formatPagePrice(Number(quote.price))
+        : '—';
       return `
       <article class="market-watch-card">
         ${spark}
         <div class="market-watch-card-head">
-          <div><strong>${escapeHTML(quote?.code || '待补代码')}</strong><span>${escapeHTML(quote?.name || '关注合约')}</span></div>
+          <div><strong>${name}</strong><span>${code}</span></div>
           <span class="market-watch-unit">${escapeHTML(quote?.unit || '价格')}</span>
         </div>
-        <strong class="market-watch-price">${quote?.price !== null && quote?.price !== undefined && quote?.price !== '' && Number.isFinite(Number(quote.price)) ? formatPagePrice(Number(quote.price)) : '—'}</strong>
+        <strong class="market-watch-price">${priceText}</strong>
+        <div class="market-watch-foot">${changeHtml}</div>
       </article>
     `;
-    }).join('') : '<div class="market-watch-empty">暂无关注合约</div>';
+    }).join('') : '<div class="market-watch-empty">暂无观察品种（已持仓合约不会出现在此）</div>';
   }
 
   function renderPositionPage() {

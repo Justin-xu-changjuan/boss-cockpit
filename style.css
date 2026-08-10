@@ -1552,6 +1552,32 @@ body {
   color: #ff8e89 !important;
 }
 
+/* 账户卡 · 风险占用（含占用金额 / 资金使用率） */
+.account-metric-risk {
+  grid-column: 1 / -1;
+}
+.account-risk-sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+}
+.account-risk-sub em {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--text-secondary);
+}
+.account-risk-sub b {
+  font-style: normal;
+  font-weight: 750;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  margin-left: 4px;
+}
+
 .position-list::-webkit-scrollbar {
   display: none;
 }
@@ -3506,8 +3532,14 @@ textarea:focus {
   gap: 10px;
   padding: 12px;
   border-radius: 14px;
-  background: rgba(248, 247, 244, 0.9);
+  background: rgba(248, 247, 244, 0.95);
   border: 1px solid var(--line);
+}
+.today-market-grid-trade {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.today-market-card {
+  cursor: pointer;
 }
 .today-market-grid em {
   display: block;
@@ -3641,4 +3673,39 @@ textarea:focus {
     width: 100%;
     justify-content: flex-start;
   }
+}
+
+
+/* 账户卡浅色主题下的盈亏色 */
+.account-overview-card .account-value-up { color: #2F7A55 !important; }
+.account-overview-card .account-value-down { color: #C24B47 !important; }
+.account-overview-card .account-metric-grid strong { color: var(--text-primary) !important; }
+.account-overview-card .account-status-dot { color: #2F7A55 !important; }
+
+
+/* 市场观察：涨跌与页脚 */
+.home-market-unit-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+  width: 100%;
+}
+.home-market-change,
+.market-watch-change {
+  font-size: 12px;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+.home-market-change.is-up,
+.market-watch-change.is-up { color: #2F7A55; }
+.home-market-change.is-down,
+.market-watch-change.is-down { color: #C24B47; }
+.home-market-change.is-flat,
+.market-watch-change.is-flat { color: var(--text-tertiary); }
+.market-watch-foot {
+  margin-top: 6px;
+  position: relative;
+  z-index: 1;
 }

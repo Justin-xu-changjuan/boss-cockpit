@@ -17,7 +17,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="icons/app-icon-180.png" />
   
   <title>老板驾驶舱</title>
-  <link rel="stylesheet" href="style.css?v=bg11" />
+  <link rel="stylesheet" href="style.css?v=split1" />
 </head>
 <body>
   <!-- ========== App 启动层 ========== -->
@@ -64,7 +64,7 @@
       <div class="section-header">
         <div>
           <h2 class="section-title" id="account-overview-title">账户总览</h2>
-          <p class="section-subtitle">资金、保证金与风险状态</p>
+          <p class="section-subtitle">权益 · 本金 · 累计盈亏 · 风险占用</p>
         </div>
       </div>
       <div class="account-overview-card" id="account-overview">
@@ -72,48 +72,36 @@
       </div>
     </section>
 
-    <!-- ========== 行情关注预览 ========== -->
-    <section class="section market-section" aria-labelledby="home-market-title">
-      <div class="section-header">
-        <div>
-          <h2 class="section-title" id="home-market-title">行情关注</h2>
-          <p class="section-subtitle" id="home-market-subtitle">关注合约最新价格</p>
-        </div>
-        <div class="section-actions">
-          <button class="section-action" type="button" data-gpt-import aria-controls="view-gpt-import">GPT智能录入</button>
-          <button class="section-action" type="button" data-market-watch aria-controls="view-market-watch">查看全部</button>
-        </div>
-      </div>
-      <div class="home-market-grid" id="home-futures-grid">
-        <!-- 由 JS 渲染，最多显示 4 条 -->
-      </div>
-    </section>
-
-    <!-- ========== 今日行情（GPT 更新后展示） ========== -->
+    <!-- ========== 今日行情：交易驾驶中心（有持仓） ========== -->
     <section class="section today-market-section" aria-labelledby="today-market-title">
       <div class="section-header">
         <div>
           <h2 class="section-title" id="today-market-title">今日行情</h2>
-          <p class="section-subtitle" id="today-market-subtitle">品种 · 合约 · 持仓 · 计划</p>
+          <p class="section-subtitle" id="today-market-subtitle">我的交易驾驶中心</p>
         </div>
-        <span class="section-meta" id="today-market-updated">更新时间 —</span>
+        <div class="section-actions">
+          <button class="section-action" type="button" data-gpt-import aria-controls="view-gpt-import">GPT智能录入</button>
+          <span class="section-meta" id="today-market-updated">更新时间 —</span>
+        </div>
       </div>
       <div class="today-market-list" id="today-market-list">
-        <!-- 由 JS 渲染 -->
+        <!-- 仅展示有持仓的品种，由 JS 渲染 -->
       </div>
     </section>
 
-    <!-- ========== 期货持仓 ========== -->
-    <section class="section position-section" aria-labelledby="home-position-title">
+    <!-- ========== 市场观察：自选监控（无持仓） ========== -->
+    <section class="section market-section" aria-labelledby="home-market-title">
       <div class="section-header">
         <div>
-          <h2 class="section-title" id="home-position-title">我的持仓</h2>
-          <p class="section-subtitle">当前持仓概览</p>
+          <h2 class="section-title" id="home-market-title">市场观察</h2>
+          <p class="section-subtitle" id="home-market-subtitle">自选行情 · 未持仓品种</p>
         </div>
-        <button class="section-action" type="button" data-gpt-import aria-controls="view-gpt-import">GPT智能录入</button>
+        <div class="section-actions">
+          <button class="section-action" type="button" data-market-watch aria-controls="view-market-watch">查看全部</button>
+        </div>
       </div>
-      <div class="position-list" id="position-list">
-        <!-- 由 JS 渲染 -->
+      <div class="home-market-grid" id="home-futures-grid">
+        <!-- 仅展示无持仓的关注合约 -->
       </div>
     </section>
 
@@ -171,8 +159,9 @@
         </div>
         <div class="gpt-import-panel" id="gpt-import-panel">
           <p class="gpt-import-help">
-            支持固定格式 JSON（可含 <code>```json</code> 代码块）。有对应合约则覆盖更新，没有则新增；历史按日期保留在本地日志。
-            手动录入入口仍保留在「我的持仓 → 智能录入」。
+            支持固定格式 JSON（可含 <code>```json</code> 代码块）。可更新 <code>account</code> 与 <code>futures</code>。
+            <strong>有持仓</strong>的合约进入首页「今日行情」；<strong>无持仓</strong>的关注合约进入「市场观察」，同一品种不重复显示。
+            手动录入仍保留在持仓详情页。
           </p>
           <label class="gpt-import-label" for="gpt-import-input">GPT 数据</label>
           <textarea
@@ -193,24 +182,24 @@
     </main>
   </section>
 
-  <!-- ========== 行情关注页面 ========== -->
+  <!-- ========== 市场观察页面（原行情关注） ========== -->
   <section class="app-view secondary-view market-watch-view" id="view-market-watch" data-view="market-watch" hidden>
     <header class="view-header">
       <button class="view-back-button" type="button" data-market-watch-back>返回首页</button>
-      <h1 class="view-title">行情关注</h1>
-      <p class="view-subtitle" id="market-watch-subtitle">所有关注合约的最新价格</p>
+      <h1 class="view-title">市场观察</h1>
+      <p class="view-subtitle" id="market-watch-subtitle">自选行情监控 · 不含已持仓品种</p>
     </header>
     <main class="view-main">
       <section class="view-section" aria-labelledby="market-watch-title">
         <div class="view-section-heading">
-          <h2 class="view-section-title" id="market-watch-title">关注合约</h2>
+          <h2 class="view-section-title" id="market-watch-title">观察列表</h2>
           <div class="section-actions">
             <button class="market-watch-add-button" type="button" data-gpt-import>GPT智能录入</button>
-            <button class="market-watch-add-button" type="button" data-market-add-toggle aria-expanded="false" aria-controls="market-watch-add-form">添加关注合约</button>
+            <button class="market-watch-add-button" type="button" data-market-add-toggle aria-expanded="false" aria-controls="market-watch-add-form">添加观察</button>
           </div>
         </div>
         <form class="market-watch-add-form" id="market-watch-add-form" hidden>
-          <p class="market-watch-form-help">保存后会加入行情关注。新合约尚未录入价格时显示“—”。</p>
+          <p class="market-watch-form-help">保存后加入市场观察。已有持仓的合约不会出现在此列表（避免与今日行情重复）。</p>
           <div class="market-watch-form-grid">
             <label class="market-watch-field">
               <span>合约代码</span>
@@ -352,7 +341,7 @@
     </button>
     <button class="nav-item" type="button" data-page="market-watch" aria-controls="view-market-watch">
       <span class="nav-icon">📈</span>
-      <span class="nav-label">行情</span>
+      <span class="nav-label">观察</span>
     </button>
     <button class="nav-item" type="button" data-page="tesla" aria-controls="view-tesla">
       <span class="nav-icon">🚘</span>
@@ -369,13 +358,13 @@
   </nav>
 
   <!-- 数据与逻辑 -->
-  <script src="dataStore.js?v=bg11"></script>
-  <script src="futuresData.js?v=bg11"></script>
-  <script src="vehicleData.js?v=bg11"></script>
-  <script src="accountData.js?v=bg11"></script>
-  <script src="data.js?v=bg11"></script>
-  <script src="gptImport.js?v=bg11"></script>
-  <script src="pages.js?v=bg11"></script>
-  <script src="script.js?v=bg11"></script>
+  <script src="dataStore.js?v=split1"></script>
+  <script src="futuresData.js?v=split1"></script>
+  <script src="vehicleData.js?v=split1"></script>
+  <script src="accountData.js?v=split1"></script>
+  <script src="data.js?v=split1"></script>
+  <script src="gptImport.js?v=split1"></script>
+  <script src="pages.js?v=split1"></script>
+  <script src="script.js?v=split1"></script>
 </body>
 </html>

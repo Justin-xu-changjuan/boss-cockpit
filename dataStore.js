@@ -52,6 +52,7 @@
     domain: item?.domain ?? 'futures',
     futures: Array.isArray(item?.futures) ? item.futures : [],
     positions: Array.isArray(item?.positions) ? item.positions : [],
+    account: item?.account ?? null,
     summary: item?.summary ?? null
   }));
 
@@ -68,14 +69,46 @@
     if (moduleName === 'dailyLogs') return normalizeDailyLogs(value);
     if (moduleName === 'meta') return normalizeMeta(value || {});
     if (moduleName === 'accountData') {
-      return {
-        equity: value?.equity ?? null,
-        availableFunds: value?.availableFunds ?? null,
-        margin: value?.margin ?? value?.occupiedMargin ?? null,
-        floatingPnl: value?.floatingPnl ?? null
-      };
+      return normalizeAccount(value);
     }
     return value;
+  };
+
+  /** 账户：本金可改；累计盈亏/风险占用率自动计算 */
+  const normalizeAccount = value => {
+    const equityRaw = value?.equity;
+    const capitalRaw = value?.capital ?? value?.principal;
+    const marginRaw = value?.margin ?? value?.occupiedMargin ?? value?.risk_amount;
+    const equity = equityRaw === null || equityRaw === undefined || equityRaw === ''
+      ? null
+      : Number(equityRaw);
+    const capital = capitalRaw === null || capitalRaw === undefined || capitalRaw === ''
+      ? 102000
+      : Number(capitalRaw);
+    const margin = marginRaw === null || marginRaw === undefined || marginRaw === ''
+      ? null
+      : Number(marginRaw);
+
+    const eq = Number.isFinite(equity) ? equity : null;
+    const cap = Number.isFinite(capital) ? capital : 102000;
+    const mg = Number.isFinite(margin) ? margin : null;
+
+    const profit = eq !== null ? eq - cap : null;
+    const risk_rate = eq !== null && eq > 0 && mg !== null ? mg / eq : null;
+
+    return {
+      equity: eq,
+      capital: cap,
+      margin: mg,
+      // 计算字段（始终重算）
+      profit,
+      risk_rate,
+      // 兼容旧字段：floatingPnl 同步为累计盈亏
+      availableFunds: value?.availableFunds ?? null,
+      floatingPnl: profit,
+      updatedAt: value?.updatedAt ?? null,
+      source: value?.source ?? null
+    };
   };
 
   const save = () => {
@@ -194,9 +227,28 @@
     return { total: logs.length, date };
   };
 
+  /** 合并账户字段：只覆盖传入的非空字段；profit/risk_rate 始终重算 */
+  const mergeAccount = (incoming = {}) => {
+    const current = normalizeAccount(stored.accountData || {});
+    const next = { ...current };
+    if (incoming.equity !== undefined && incoming.equity !== null && incoming.equity !== '') {
+      next.equity = Number(incoming.equity);
+    }
+    if (incoming.capital !== undefined && incoming.capital !== null && incoming.capital !== '') {
+      next.capital = Number(incoming.capital);
+    }
+    if (incoming.margin !== undefined && incoming.margin !== null && incoming.margin !== '') {
+      next.margin = Number(incoming.margin);
+    }
+    if (incoming.updatedAt) next.updatedAt = incoming.updatedAt;
+    if (incoming.source) next.source = incoming.source;
+    applyModule('accountData', next);
+    return normalizeAccount(stored.accountData);
+  };
+
   /**
-   * GPT 增量导入（期货域）
-   * - 合并行情 / 持仓
+   * GPT 增量导入（期货域 + 可选账户）
+   * - 合并行情 / 持仓 / 账户
    * - 写入当日 dailyLogs（不删历史）
    * - 更新 meta 时间戳
    */
@@ -205,10 +257,12 @@
     const updatedAt = payload?.updatedAt || new Date().toISOString();
     const quotes = Array.isArray(payload?.quotes) ? payload.quotes : [];
     const positions = Array.isArray(payload?.positions) ? payload.positions : [];
+    const account = payload?.account && typeof payload.account === 'object' ? payload.account : null;
     const domain = payload?.domain || 'futures';
 
-    const quoteStats = mergeQuotes(quotes);
-    const positionStats = mergePositions(positions);
+    const quoteStats = quotes.length ? mergeQuotes(quotes) : { added: 0, updated: 0, total: (stored.futuresData || []).length };
+    const positionStats = positions.length ? mergePositions(positions) : { added: 0, updated: 0, total: (stored.positions || []).length };
+    const accountResult = account ? mergeAccount({ ...account, updatedAt, source: 'gpt' }) : null;
 
     upsertDailyLog({
       date,
@@ -217,9 +271,11 @@
       domain,
       futures: quotes,
       positions,
+      account: accountResult,
       summary: {
         quoteCount: quotes.length,
-        positionCount: positions.length
+        positionCount: positions.length,
+        accountUpdated: Boolean(accountResult)
       }
     });
 
@@ -232,12 +288,19 @@
     });
 
     save();
-    emit({
-      modules: ['futuresData', 'positions', 'dailyLogs', 'meta'],
-      source: 'gpt'
-    });
+    const modules = ['dailyLogs', 'meta'];
+    if (quotes.length) modules.push('futuresData');
+    if (positions.length) modules.push('positions');
+    if (accountResult) modules.push('accountData');
+    emit({ modules, source: 'gpt' });
 
-    return { quotes: quoteStats, positions: positionStats, date, updatedAt };
+    return {
+      quotes: quoteStats,
+      positions: positionStats,
+      account: accountResult,
+      date,
+      updatedAt
+    };
   };
 
   const importJSON = input => {
@@ -279,6 +342,7 @@
     getModule,
     mergeQuotes,
     mergePositions,
+    mergeAccount,
     upsertDailyLog,
     applyGPTImport,
     importJSON,

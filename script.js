@@ -125,20 +125,31 @@
 
     const account = window.accountData || {};
     const equity = Number(account.equity);
+    const capital = Number(account.capital);
     const margin = Number(account.margin);
-    const floatingPnl = Number(account.floatingPnl);
-    const riskRatio = Number.isFinite(equity) && equity > 0 && Number.isFinite(margin)
-      ? (margin / equity) * 100
-      : null;
-    const pnlClass = floatingPnl >= 0 ? 'account-value-up' : 'account-value-down';
-    const pnlSign = floatingPnl > 0 ? '+' : (floatingPnl < 0 ? '-' : '');
+    // 累计盈亏 = 账户权益 - 本金（优先用规范化后的 profit）
+    const profit = Number.isFinite(Number(account.profit))
+      ? Number(account.profit)
+      : (Number.isFinite(equity) && Number.isFinite(capital) ? equity - capital : NaN);
+    // 风险占用率 = 持仓保证金 ÷ 账户权益
+    const riskRate = Number.isFinite(Number(account.risk_rate))
+      ? Number(account.risk_rate) * (Number(account.risk_rate) <= 1 ? 100 : 1)
+      : (Number.isFinite(equity) && equity > 0 && Number.isFinite(margin) ? (margin / equity) * 100 : null);
+
+    const pnlClass = Number.isFinite(profit)
+      ? (profit >= 0 ? 'account-value-up' : 'account-value-down')
+      : '';
+    const pnlSign = profit > 0 ? '+' : (profit < 0 ? '-' : '');
     const formatAccountAmount = value => Number.isFinite(Number(value))
       ? `¥${formatMoney(value)}`
       : '待接入';
-    const sparkTone = floatingPnl < 0 ? 'peach' : 'mint';
+    const sparkTone = Number.isFinite(profit) && profit < 0 ? 'peach' : 'mint';
+    const riskText = riskRate === null || !Number.isFinite(riskRate)
+      ? '待接入'
+      : `${riskRate.toFixed(2)}%`;
 
     container.innerHTML = `
-      ${buildSparkline(`equity-${equity}-${floatingPnl}`, { className: 'card-spark card-spark-account', tone: sparkTone, width: 360, height: 96, points: 22 })}
+      ${buildSparkline(`equity-${equity}-${profit}`, { className: 'card-spark card-spark-account', tone: sparkTone, width: 360, height: 96, points: 22 })}
       <div class="account-equity-row">
         <div>
           <span class="account-label">账户权益</span>
@@ -147,10 +158,22 @@
         <span class="account-status-dot"><i aria-hidden="true"></i>运行正常</span>
       </div>
       <div class="account-metric-grid">
-        <div><span>可用资金</span><strong>${formatAccountAmount(account.availableFunds)}</strong></div>
-        <div><span>持仓保证金</span><strong>${formatAccountAmount(account.margin)}</strong></div>
-        <div><span>总浮盈亏</span><strong class="${Number.isFinite(floatingPnl) ? pnlClass : ''}">${Number.isFinite(floatingPnl) ? `${pnlSign}¥${formatMoney(floatingPnl)}` : '待接入'}</strong></div>
-        <div><span>风险比例</span><strong>${riskRatio === null ? '待接入' : `${riskRatio.toFixed(2)}%`}</strong></div>
+        <div>
+          <span>本金</span>
+          <strong>${formatAccountAmount(account.capital)}</strong>
+        </div>
+        <div>
+          <span>累计盈亏</span>
+          <strong class="${pnlClass}">${Number.isFinite(profit) ? `${pnlSign}¥${formatMoney(profit)}` : '待接入'}</strong>
+        </div>
+        <div class="account-metric-risk">
+          <span>风险占用</span>
+          <strong>${riskText}</strong>
+          <div class="account-risk-sub">
+            <em>占用金额 <b>${formatAccountAmount(account.margin)}</b></em>
+            <em>资金使用率 <b>${riskText}</b></em>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -167,33 +190,88 @@
     });
   }
 
+  /** 有效持仓：有方向或数量>0 */
+  function getActivePositions() {
+    return (Array.isArray(window.positions) ? window.positions : []).filter(item => {
+      const qty = Number(item?.quantity);
+      const dir = String(item?.direction || '').trim();
+      return (Number.isFinite(qty) && qty > 0) || Boolean(dir);
+    });
+  }
+
+  function getHeldCodeSet(positions) {
+    return new Set(
+      positions.map(item => String(item.code || '').trim().toUpperCase()).filter(Boolean)
+    );
+  }
+
+  function formatChange(change) {
+    if (change === null || change === undefined || change === '') return null;
+    if (typeof change === 'number' && Number.isFinite(change)) {
+      const sign = change > 0 ? '+' : '';
+      return { text: `${sign}${change}`, up: change >= 0 };
+    }
+    const text = String(change).trim();
+    if (!text || text === '—' || text === '-') return null;
+    const num = Number(String(text).replace(/%/g, '').replace(/,/g, ''));
+    const up = Number.isFinite(num) ? num >= 0 : !text.startsWith('-');
+    const normalized = text.includes('%') || !Number.isFinite(num)
+      ? text
+      : `${num > 0 ? '+' : ''}${num}`;
+    return { text: normalized, up };
+  }
+
+  /**
+   * 市场观察（首页预览）：仅未持仓的自选行情
+   * 展示：品种、合约、最新价、涨跌、趋势小图
+   */
   function renderHomeMarketPreview() {
     const grid = document.getElementById('home-futures-grid');
     if (!grid) return;
-    const quotes = Array.isArray(window.futuresData) ? window.futuresData.slice(0, 4) : [];
+    const held = getHeldCodeSet(getActivePositions());
+    const quotes = (Array.isArray(window.futuresData) ? window.futuresData : [])
+      .filter(q => {
+        const code = String(q?.code || '').trim().toUpperCase();
+        return code && !held.has(code);
+      })
+      .slice(0, 4);
     const tones = ['sand', 'lavender', 'sky', 'mint'];
     const meta = window.meta || {};
     const homeSub = document.getElementById('home-market-subtitle');
     if (homeSub) {
       homeSub.textContent = meta.lastGPTUpdateAt
-        ? `关注合约 · 更新 ${formatUpdateTime(meta.lastGPTUpdateAt)}`
-        : '关注合约最新价格';
+        ? `自选监控 · 更新 ${formatUpdateTime(meta.lastGPTUpdateAt)}`
+        : '自选行情 · 未持仓品种';
     }
     grid.innerHTML = quotes.length ? quotes.map((quote, index) => {
       const code = escapeHTML(quote?.code || '待补代码');
       const tone = tones[index % tones.length];
+      const ch = formatChange(quote?.change);
+      const changeHtml = ch
+        ? `<span class="home-market-change ${ch.up ? 'is-up' : 'is-down'}">${escapeHTML(ch.text)}</span>`
+        : `<span class="home-market-change is-flat">—</span>`;
       return `
-        <button class="home-market-card" type="button" data-market-watch-card aria-label="查看行情 ${code}">
-          ${buildSparkline(`${quote?.code || 'x'}-${quote?.price || 0}`, { className: 'card-spark card-spark-market', tone, width: 180, height: 64, points: 14 })}
-          <span class="home-market-card-top"><strong>${code}</strong><span>${escapeHTML(quote?.name || '关注合约')}</span></span>
+        <button class="home-market-card" type="button" data-market-watch-card aria-label="市场观察 ${code}">
+          ${buildSparkline(`${quote?.code || 'x'}-${quote?.price || 0}-${quote?.change || ''}`, { className: 'card-spark card-spark-market', tone, width: 180, height: 64, points: 14 })}
+          <span class="home-market-card-top">
+            <strong>${escapeHTML(quote?.name || getContractName(quote?.code))}</strong>
+            <span>${code}</span>
+          </span>
           <span class="home-market-price">${formatPrice(quote?.price)}</span>
-          <span class="home-market-unit">${escapeHTML(quote?.unit || '价格')}</span>
+          <span class="home-market-unit-row">
+            <span class="home-market-unit">${escapeHTML(quote?.unit || '价格')}</span>
+            ${changeHtml}
+          </span>
         </button>
       `;
-    }).join('') : '<div class="market-watch-empty">暂无关注合约</div>';
+    }).join('') : '<div class="market-watch-empty">暂无观察品种。未持仓的关注合约会显示在这里。</div>';
   }
 
-  /** 今日行情：合并行情 + 持仓，展示品种/合约/价/持仓/成本/浮盈/计划 */
+  /**
+   * 今日行情：交易驾驶中心
+   * 仅展示有持仓的品种（不与市场观察重复）
+   * 字段：品种/合约/最新价/方向/数量/成本/浮盈/计划/目标/止损
+   */
   function renderTodayMarket() {
     const list = document.getElementById('today-market-list');
     const updatedEl = document.getElementById('today-market-updated');
@@ -201,7 +279,7 @@
     if (!list) return;
 
     const quotes = Array.isArray(window.futuresData) ? window.futuresData : [];
-    const positions = Array.isArray(window.positions) ? window.positions : [];
+    const positions = getActivePositions();
     const meta = window.meta || {};
     const logs = Array.isArray(window.dailyLogs) ? window.dailyLogs : [];
     const latestLog = logs.find(item => item.domain === 'futures') || logs[0];
@@ -210,28 +288,17 @@
     if (updatedEl) updatedEl.textContent = `更新时间 ${formatUpdateTime(updatedAt)}`;
     if (subEl) {
       subEl.textContent = latestLog?.date
-        ? `日期 ${latestLog.date} · 品种/合约/持仓/计划`
-        : '品种 · 合约 · 持仓 · 计划';
+        ? `交易驾驶中心 · ${latestLog.date}`
+        : '交易驾驶中心 · 持仓品种';
     }
 
-    const positionByCode = new Map(
-      positions.map(item => [String(item.code || '').toUpperCase(), item])
+    const quoteByCode = new Map(
+      quotes.map(item => [String(item.code || '').toUpperCase(), item])
     );
 
-    // 优先展示：有持仓的合约 + 其余行情（最多 8 条）
-    const orderedCodes = [];
-    positions.forEach(p => {
-      const code = String(p.code || '').toUpperCase();
-      if (code && !orderedCodes.includes(code)) orderedCodes.push(code);
-    });
-    quotes.forEach(q => {
-      const code = String(q.code || '').toUpperCase();
-      if (code && !orderedCodes.includes(code)) orderedCodes.push(code);
-    });
-
-    const rows = orderedCodes.slice(0, 8).map(code => {
-      const quote = quotes.find(item => String(item.code || '').toUpperCase() === code) || {};
-      const pos = positionByCode.get(code) || {};
+    const rows = positions.map(pos => {
+      const code = String(pos.code || '').toUpperCase();
+      const quote = quoteByCode.get(code) || {};
       const floatingPnl = Number(pos.floatingPnl);
       const pnlText = Number.isFinite(floatingPnl)
         ? `${floatingPnl > 0 ? '+' : ''}¥${formatMoney(floatingPnl)}`
@@ -241,26 +308,28 @@
         : '';
       const direction = pos.direction || '—';
       const qty = Number(pos.quantity);
-      const holdText = direction !== '—' || Number.isFinite(qty)
-        ? `${direction}${Number.isFinite(qty) && qty ? ` ${qty}手` : ''}`
-        : '—';
+      const qtyText = Number.isFinite(qty) && qty ? `${qty} 手` : '—';
+      const price = quote.price ?? pos.currentPrice;
       return `
-        <article class="today-market-card">
+        <article class="today-market-card" data-position-preview>
           <header class="today-market-head">
             <div>
               <strong>${escapeHTML(quote.name || getContractName(code))}</strong>
-              <span>${escapeHTML(code)}</span>
+              <span>${escapeHTML(code || '—')}</span>
             </div>
             <div class="today-market-price-block">
               <em>最新价</em>
-              <b>${formatPrice(quote.price ?? pos.currentPrice)}</b>
+              <b>${formatPrice(price)}</b>
             </div>
           </header>
-          <div class="today-market-grid">
-            <div><em>持仓</em><b>${escapeHTML(holdText)}</b></div>
+          <div class="today-market-grid today-market-grid-trade">
+            <div><em>持仓方向</em><b>${escapeHTML(direction)}</b></div>
+            <div><em>持仓数量</em><b>${escapeHTML(qtyText)}</b></div>
             <div><em>成本</em><b>${formatPrice(pos.cost)}</b></div>
             <div><em>浮盈亏</em><b class="${pnlClass}">${pnlText}</b></div>
-            <div class="today-market-plan"><em>操作计划</em><b>${escapeHTML(pos.plan || quote.note || '—')}</b></div>
+            <div><em>目标价</em><b>${formatPrice(pos.target)}</b></div>
+            <div><em>止损价</em><b>${formatPrice(pos.stopLoss)}</b></div>
+            <div class="today-market-plan"><em>操作计划</em><b>${escapeHTML(pos.plan || pos.note || '—')}</b></div>
           </div>
         </article>
       `;
@@ -268,7 +337,7 @@
 
     list.innerHTML = rows.length
       ? rows.join('')
-      : '<div class="today-market-empty">暂无行情。可用「GPT智能录入」一键更新。</div>';
+      : '<div class="today-market-empty">暂无持仓。用「GPT智能录入」写入带持仓的合约后，将显示在这里。</div>';
   }
 
   function getContractName(code) {
@@ -429,9 +498,8 @@
     initSplashScreen();
     initHeader();
     renderAccountOverview();
-    renderHomeMarketPreview();
     renderTodayMarket();
-    renderPositions();
+    renderHomeMarketPreview();
     window.renderAppPages?.();
     window.initAppRouter?.();
     initTouchFeedback();
@@ -439,13 +507,14 @@
     window.addEventListener('bossdatachange', event => {
       const changedModules = event.detail?.modules || [event.detail?.module].filter(Boolean);
       if (changedModules.includes('accountData')) renderAccountOverview();
-      if (changedModules.includes('futuresData') || changedModules.includes('meta') || changedModules.includes('dailyLogs')) {
+      if (
+        changedModules.includes('futuresData')
+        || changedModules.includes('positions')
+        || changedModules.includes('meta')
+        || changedModules.includes('dailyLogs')
+      ) {
+        renderTodayMarket();
         renderHomeMarketPreview();
-        renderTodayMarket();
-      }
-      if (changedModules.includes('positions')) {
-        renderPositions();
-        renderTodayMarket();
       }
       window.renderAppPages?.({ changedModules });
     });
