@@ -2716,6 +2716,174 @@ textarea:focus {
   font-weight: 650 !important;
 }
 
+/* 家居：仅呈现三项常用设备，真实控制状态以同源服务响应为准。 */
+.smart-home-view {
+  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 24px);
+}
+
+.smart-home-device-list {
+  display: grid;
+  gap: 14px;
+}
+
+.smart-home-card {
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 18px;
+}
+
+.smart-home-card-coffee {
+  background: #fffdf8;
+}
+
+.smart-home-card-heading {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.smart-home-device-icon {
+  align-items: center;
+  background: var(--peach);
+  border-radius: 14px;
+  color: #9a6044;
+  display: flex;
+  font-size: 21px;
+  height: 48px;
+  justify-content: center;
+  width: 48px;
+}
+
+.smart-home-device-icon-sky { background: var(--sky); color: #487993; }
+.smart-home-device-icon-lavender { background: var(--lavender); color: #69588d; }
+
+.smart-home-card h3 {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.smart-home-card-heading p,
+.smart-home-power-row span,
+.smart-home-unavailable-row span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+  margin-top: 4px;
+}
+
+.smart-home-status-dot {
+  background: var(--text-tertiary);
+  border-radius: 50%;
+  display: inline-block;
+  height: 7px;
+  margin-right: 5px;
+  width: 7px;
+}
+
+.smart-home-status-dot.is-pending { background: #b9a66a; }
+
+.smart-home-power-row,
+.smart-home-unavailable-row {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 15px;
+}
+
+.smart-home-power-row strong {
+  color: var(--text-primary);
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.smart-home-power-row span { display: block; }
+
+.home-power-toggle {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  flex: 0 0 auto;
+  min-height: 48px;
+  min-width: 64px;
+  padding: 4px;
+}
+
+.home-power-toggle-track {
+  align-items: center;
+  background: #c9c5bd;
+  border-radius: 999px;
+  display: flex;
+  height: 32px;
+  padding: 3px;
+  transition: background-color 160ms ease-out;
+  width: 56px;
+}
+
+.home-power-toggle-track span {
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(44, 42, 38, 0.16);
+  display: block;
+  height: 26px;
+  margin: 0;
+  transform: translateX(0);
+  transition: transform 160ms ease-out;
+  width: 26px;
+}
+
+.home-power-toggle.is-on .home-power-toggle-track { background: var(--accent); }
+.home-power-toggle.is-on .home-power-toggle-track span { transform: translateX(24px); }
+.home-power-toggle.is-unknown .home-power-toggle-track { background: #d8d5cf; }
+.home-power-toggle:disabled { cursor: not-allowed; opacity: 0.68; }
+.home-power-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.smart-home-unavailable-row button {
+  background: #f1eee8;
+  border: 0;
+  border-radius: 12px;
+  color: var(--text-secondary);
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: 12px;
+  min-height: 44px;
+  padding: 0 13px;
+}
+
+.smart-home-empty {
+  background: var(--surface-solid);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  padding: 18px;
+}
+
+.sr-only {
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-power-toggle-track,
+  .home-power-toggle-track span {
+    transition: none;
+  }
+}
+
 /* Toast */
 .toast {
   background: rgba(44, 42, 38, 0.92) !important;

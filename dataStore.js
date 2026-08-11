@@ -5,7 +5,7 @@
  */
 (() => {
   const STORAGE_KEY = 'boss-cockpit-data-v1';
-  const modules = ['futuresData', 'vehicleData', 'accountData', 'positions', 'fileEntries', 'dailyLogs', 'meta'];
+  const modules = ['futuresData', 'vehicleData', 'accountData', 'positions', 'fileEntries', 'homeDevices', 'dailyLogs', 'meta'];
   let stored = {};
 
   try {

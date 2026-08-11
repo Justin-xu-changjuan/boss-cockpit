@@ -1,4 +1,4 @@
-/** 持仓与文件入口默认数据；模块实例统一由 BossData 暴露到 window。 */
+/** 持仓、文件入口与家居设备默认数据；模块实例统一由 BossData 暴露到 window。 */
 (() => {
   const positionsDefaults = [
     {
@@ -21,6 +21,13 @@
     { id: 'image', name: '图片资料' }
   ];
 
+  const homeDevicesDefaults = [
+    { id: 'coffee-maker', name: '咖啡机', type: 'power', api: 'mijia-plug' },
+    { id: 'air-conditioner', name: '空调', type: 'placeholder' },
+    { id: 'door-lock', name: '门锁', type: 'placeholder' }
+  ];
+
   window.BossData.register('positions', positionsDefaults);
   window.BossData.register('fileEntries', fileEntriesDefaults);
+  window.BossData.register('homeDevices', homeDevicesDefaults);
 })();

@@ -8,11 +8,11 @@
  */
 
 (() => {
-  const appRoutes = ['home', 'market-watch', 'tesla', 'file', 'me', 'data', 'position', 'position-input', 'gpt-import'];
+  const appRoutes = ['home', 'market-watch', 'tesla', 'smart-home', 'me', 'data', 'position', 'position-input', 'gpt-import'];
   const routeTitles = {
     home: '老板驾驶舱',
     tesla: 'Tesla',
-    file: '文件',
+    'smart-home': '家居',
     me: '我的',
     data: '数据管理',
     position: '我的持仓',
@@ -22,6 +22,7 @@
   };
   const scrollPositions = new Map();
   let teslaCommandTimer = null;
+  let teslaCommandCleanup = null;
   let teslaReturnPage = 'home';
   let appRouterInitialized = false;
 
@@ -55,6 +56,7 @@
 
   function getRouteFromHash() {
     const route = window.location.hash.replace('#', '');
+    if (route === 'file') return 'smart-home';
     return appRoutes.includes(route) ? route : 'home';
   }
 
@@ -63,6 +65,10 @@
     const activeView = document.querySelector('.app-view.is-active');
     const targetView = document.getElementById(`view-${targetPage}`);
     if (!targetView) return;
+
+    if (activeView?.dataset.view === 'tesla-control' && teslaCommandCleanup) {
+      teslaCommandCleanup();
+    }
 
     if (activeView && activeView !== targetView) {
       scrollPositions.set(activeView.dataset.view, window.scrollY);
@@ -98,9 +104,11 @@
     }
   }
 
-  function isIOSDevice() {
-    return /iPhone|iPad|iPod/i.test(navigator.userAgent)
-      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  function isAppleDevice() {
+    const userAgent = navigator.userAgent || '';
+    const platform = navigator.platform || '';
+    return /iPhone|iPad|iPod|Macintosh|Mac OS X/i.test(userAgent)
+      || /MacIntel|MacPPC|Mac68K/i.test(platform);
   }
 
   function getTeslaVehicle(vehicleId) {
@@ -220,7 +228,7 @@
     }).join('');
 
     feedback.className = 'tesla-feedback';
-    feedback.textContent = '点击按钮将调用 iOS 快捷指令';
+    feedback.textContent = '点击按钮将请求系统快捷指令';
 
     commandGrid.querySelectorAll('.tesla-command-button').forEach(button => {
       button.addEventListener('click', () => handleTeslaCommand(button, vehicle));
@@ -240,6 +248,7 @@
       '.tesla-command-button, .tesla-soft-btn, .tesla-soft-chip'
     );
 
+    if (teslaCommandCleanup) teslaCommandCleanup();
     window.clearTimeout(teslaCommandTimer);
     relatedButtons().forEach(item => {
       item.disabled = true;
@@ -248,7 +257,7 @@
     button.classList.add('is-sending');
     if (feedback) {
       feedback.className = 'tesla-feedback is-sending';
-      feedback.innerHTML = `<span class="tesla-feedback-spinner" aria-hidden="true"></span>正在执行快捷指令…`;
+      feedback.innerHTML = `<span class="tesla-feedback-spinner" aria-hidden="true"></span>正在请求快捷指令…`;
     }
     notify(`${vehicle.shortName || vehicle.name} · ${command.label}…`);
 
@@ -257,67 +266,77 @@
       document.removeEventListener('visibilitychange', handleShortcutVisibility);
       window.removeEventListener('pagehide', handleShortcutPageHide);
       window.removeEventListener('pageshow', handleShortcutPageShow);
+      window.clearTimeout(teslaCommandTimer);
+      button.classList.remove('is-sending');
+      unlockButtons();
+      if (teslaCommandCleanup === cleanupShortcutListeners) {
+        teslaCommandCleanup = null;
+        teslaCommandTimer = null;
+      }
     };
     const unlockButtons = () => {
       relatedButtons().forEach(item => {
         item.disabled = false;
       });
     };
-    const showShortcutSuccess = () => {
+    const showShortcutRequested = () => {
       cleanupShortcutListeners();
       button.classList.remove('is-sending');
-      button.classList.add('is-complete');
       unlockButtons();
       if (feedback) {
-        feedback.className = 'tesla-feedback is-complete';
-        feedback.innerHTML = `<span aria-hidden="true">✓</span>${escapeHTML(vehicle.name)} · ${escapeHTML(command.label)}执行完成`;
+        feedback.className = 'tesla-feedback';
+        feedback.innerHTML = `<span aria-hidden="true">i</span>已请求快捷指令，请在快捷指令中确认执行结果`;
       }
-      notify(`${vehicle.shortName || vehicle.name} · ${command.label}完成`);
+      notify(`${vehicle.shortName || vehicle.name} · 已请求${command.label}，请确认执行结果`);
     };
-    const showShortcutMissing = () => {
+    const showShortcutRequestError = () => {
       cleanupShortcutListeners();
       button.classList.remove('is-sending');
       unlockButtons();
       if (feedback) {
         feedback.className = 'tesla-feedback is-error';
-        feedback.innerHTML = `<span aria-hidden="true">!</span>请先创建对应快捷指令：${escapeHTML(shortcutName)}`;
+        feedback.innerHTML = `<span aria-hidden="true">!</span>未能请求快捷指令，请检查系统快捷指令是否存在：${escapeHTML(shortcutName)}`;
       }
-      notify(`请先创建快捷指令：${shortcutName}`);
+      notify(`未能请求快捷指令：${shortcutName}`);
     };
     const handleShortcutVisibility = () => {
       if (document.visibilityState === 'hidden') {
         shortcutLeftPage = true;
       } else if (shortcutLeftPage) {
-        showShortcutSuccess();
+        showShortcutRequested();
       }
     };
     const handleShortcutPageHide = () => {
       shortcutLeftPage = true;
     };
     const handleShortcutPageShow = () => {
-      if (shortcutLeftPage) showShortcutSuccess();
+      if (shortcutLeftPage) showShortcutRequested();
     };
 
+    if (!isAppleDevice()) {
+      button.classList.remove('is-sending');
+      unlockButtons();
+      if (feedback) {
+        feedback.className = 'tesla-feedback is-error';
+        feedback.innerHTML = '<span aria-hidden="true">!</span>当前设备不支持系统快捷指令，请在 iPhone、iPad 或 Mac 上打开';
+      }
+      notify('当前设备不支持系统快捷指令');
+      return;
+    }
+
+    teslaCommandCleanup = cleanupShortcutListeners;
     document.addEventListener('visibilitychange', handleShortcutVisibility);
     window.addEventListener('pagehide', handleShortcutPageHide);
     window.addEventListener('pageshow', handleShortcutPageShow);
 
-    // 桌面预览环境不会处理 shortcuts://，直接展示缺少快捷指令的回退状态。
-    if (!isIOSDevice()) {
-      teslaCommandTimer = window.setTimeout(showShortcutMissing, 720);
-      return;
-    }
-
     teslaCommandTimer = window.setTimeout(() => {
-      if (!shortcutLeftPage && document.visibilityState === 'visible') {
-        showShortcutMissing();
-      }
-    }, 1400);
+      showShortcutRequested();
+    }, 900);
 
     try {
       window.location.href = `shortcuts://run-shortcut?name=${encodeURIComponent(shortcutName)}`;
     } catch (error) {
-      showShortcutMissing();
+      showShortcutRequestError();
     }
   }
 
@@ -346,7 +365,7 @@
   }
 
   function closeTeslaControlPage() {
-    window.clearTimeout(teslaCommandTimer);
+    if (teslaCommandCleanup) teslaCommandCleanup();
     window.location.hash = teslaReturnPage || 'tesla';
   }
 
@@ -355,47 +374,135 @@
     window.location.hash = vehicleId;
   }
 
-  function renderFilePage() {
-    const list = document.getElementById('file-page-list');
+  function renderSmartHomePage() {
+    const list = document.getElementById('smart-home-device-list');
     if (!list) return;
 
-    const files = window.fileEntries || [];
-    const symbols = { finance: '¥', contract: '✓', project: '◆', image: '▧' };
-    const descriptions = {
-      finance: '报表、凭证与经营数据',
-      contract: '合同、协议与签署资料',
-      project: '项目方案与推进文件',
-      image: '企业图片与视觉资产'
-    };
+    const devices = Array.isArray(window.homeDevices) ? window.homeDevices : [];
+    const coffeeMaker = devices.find(device => device.id === 'coffee-maker');
+    const airConditioner = devices.find(device => device.id === 'air-conditioner');
+    const doorLock = devices.find(device => device.id === 'door-lock');
+    if (!coffeeMaker || !airConditioner || !doorLock) {
+      list.innerHTML = '<p class="smart-home-empty">家居设备配置不完整，暂无法显示控制面板。</p>';
+      return;
+    }
 
     list.innerHTML = `
-      <div class="file-page-summary">
-        <div>
-          <span class="page-muted-label">企业资料中心</span>
-          <strong>${files.length} 类资料</strong>
+      <article class="smart-home-card smart-home-card-coffee" aria-labelledby="coffee-maker-title">
+        <div class="smart-home-card-heading">
+          <span class="smart-home-device-icon" aria-hidden="true">☕</span>
+          <div>
+            <h3 id="coffee-maker-title">${escapeHTML(coffeeMaker.name)}</h3>
+            <p id="coffee-maker-connection" role="status" aria-live="polite">正在连接家居服务…</p>
+          </div>
         </div>
-        <span>最近访问：${escapeHTML(files[0]?.name || '暂无')}</span>
-      </div>
-      <div class="file-page-list">
-        ${files.map(file => `
-          <button class="page-file-row page-action" type="button" data-id="${escapeHTML(file.id)}">
-            <span class="page-file-symbol" aria-hidden="true">${escapeHTML(symbols[file.id] || '•')}</span>
-            <span class="page-file-copy">
-              <strong>${escapeHTML(file.name)}</strong>
-              <span>${escapeHTML(descriptions[file.id] || '企业资料')}</span>
-            </span>
-            <span class="page-row-arrow" aria-hidden="true">›</span>
+        <div class="smart-home-power-row">
+          <div>
+            <strong id="coffee-maker-state">状态读取中</strong>
+            <span id="coffee-maker-detail">开关将在确认设备在线后可用</span>
+          </div>
+          <button class="home-power-toggle is-unknown" id="coffee-maker-toggle" type="button" disabled aria-describedby="coffee-maker-state coffee-maker-detail">
+            <span class="home-power-toggle-track" aria-hidden="true"><span></span></span>
+            <span class="sr-only">咖啡机状态读取中</span>
           </button>
-        `).join('')}
-      </div>
+        </div>
+      </article>
+      <article class="smart-home-card" aria-labelledby="air-conditioner-title">
+        <div class="smart-home-card-heading">
+          <span class="smart-home-device-icon smart-home-device-icon-sky" aria-hidden="true">⌇</span>
+          <div>
+            <h3 id="air-conditioner-title">${escapeHTML(airConditioner.name)}</h3>
+            <p><span class="smart-home-status-dot is-pending" aria-hidden="true"></span>待接入</p>
+          </div>
+        </div>
+        <div class="smart-home-unavailable-row">
+          <span>尚未连接控制服务，暂不显示实时状态。</span>
+          <button type="button" disabled>控制不可用</button>
+        </div>
+      </article>
+      <article class="smart-home-card" aria-labelledby="door-lock-title">
+        <div class="smart-home-card-heading">
+          <span class="smart-home-device-icon smart-home-device-icon-lavender" aria-hidden="true">⌑</span>
+          <div>
+            <h3 id="door-lock-title">${escapeHTML(doorLock.name)}</h3>
+            <p><span class="smart-home-status-dot is-pending" aria-hidden="true"></span>待接入</p>
+          </div>
+        </div>
+        <div class="smart-home-unavailable-row">
+          <span>尚未连接控制服务，暂不显示实时状态。</span>
+          <button type="button" disabled>控制不可用</button>
+        </div>
+      </article>
     `;
 
-    list.querySelectorAll('.page-file-row').forEach(row => {
-      row.addEventListener('click', () => {
-        const file = files.find(item => item.id === row.dataset.id);
-        notify(`${file?.name || '文件'}（模拟入口）`);
-      });
+    const toggle = document.getElementById('coffee-maker-toggle');
+    const state = document.getElementById('coffee-maker-state');
+    const detail = document.getElementById('coffee-maker-detail');
+    const connection = document.getElementById('coffee-maker-connection');
+    let knownPower = null;
+    let requestInFlight = false;
+
+    const paintUnknown = message => {
+      toggle.disabled = true;
+      toggle.className = 'home-power-toggle is-unknown';
+      toggle.removeAttribute('aria-pressed');
+      toggle.querySelector('.sr-only').textContent = '咖啡机状态未确认，开关不可用';
+      state.textContent = '状态未确认';
+      detail.textContent = '未能确认设备当前开关，未执行本地模拟。';
+      connection.textContent = message;
+    };
+    const paintPower = on => {
+      knownPower = Boolean(on);
+      toggle.disabled = false;
+      toggle.className = `home-power-toggle ${knownPower ? 'is-on' : 'is-off'}`;
+      toggle.setAttribute('aria-pressed', String(knownPower));
+      toggle.querySelector('.sr-only').textContent = `咖啡机当前${knownPower ? '已开启，点按关闭' : '已关闭，点按开启'}`;
+      state.textContent = knownPower ? '已开启' : '已关闭';
+      detail.textContent = '可通过已连接的米家智能插座控制';
+      connection.textContent = '已连接到家居服务';
+    };
+    const requestJSON = async (url, options) => {
+      const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store', ...options });
+      let payload;
+      try {
+        payload = await response.json();
+      } catch (error) {
+        throw new Error('服务响应不可用');
+      }
+      if (!response.ok || !payload?.ok || typeof payload.on !== 'boolean') {
+        throw new Error('家居服务暂不可用');
+      }
+      return payload;
+    };
+    const refreshStatus = async () => {
+      try {
+        const payload = await requestJSON('/api/status');
+        paintPower(payload.on);
+      } catch (error) {
+        paintUnknown('未连接到家居服务');
+      }
+    };
+
+    toggle.addEventListener('click', async () => {
+      if (requestInFlight || knownPower === null) return;
+      requestInFlight = true;
+      toggle.disabled = true;
+      connection.textContent = knownPower ? '正在关闭咖啡机…' : '正在开启咖啡机…';
+      try {
+        const payload = await requestJSON('/api/power', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: knownPower ? 'off' : 'on' })
+        });
+        paintPower(payload.on);
+      } catch (error) {
+        paintUnknown('控制未完成，未连接到家居服务');
+      } finally {
+        requestInFlight = false;
+      }
     });
+
+    refreshStatus();
   }
 
   function renderProfilePage() {
@@ -445,7 +552,7 @@
     if (!panel) return;
 
     panel.innerHTML = `
-      <p class="data-import-help">支持模块：<code>futuresData</code>、<code>vehicleData</code>、<code>accountData</code>、<code>positions</code>、<code>fileEntries</code>。</p>
+      <p class="data-import-help">支持模块：<code>futuresData</code>、<code>vehicleData</code>、<code>accountData</code>、<code>positions</code>、<code>fileEntries</code>、<code>homeDevices</code>。</p>
       <textarea class="data-import-textarea" id="data-import-input" spellcheck="false" placeholder='粘贴 JSON，例如：{"positions":[{"code":"RB2610","direction":"多","quantity":6,"cost":2997.5,"currentPrice":3010,"floatingPnl":750,"target":3120,"stopLoss":2960,"plan":"目标 3120，止损 2960"}]}'></textarea>
       <div class="data-import-actions">
         <button class="data-import-button" type="button" id="data-import-submit">导入数据</button>
@@ -827,7 +934,7 @@
   function renderAppPages(options = {}) {
     const changedModules = Array.isArray(options.changedModules) ? new Set(options.changedModules) : null;
     if (!changedModules || changedModules.has('vehicleData')) renderTeslaFleetPage();
-    if (!changedModules || changedModules.has('fileEntries')) renderFilePage();
+    if (!changedModules || changedModules.has('homeDevices')) renderSmartHomePage();
     if (!changedModules) {
       renderProfilePage();
       renderDataPage();
@@ -925,6 +1032,11 @@
     });
 
     window.addEventListener('hashchange', () => {
+      if (window.location.hash === '#file') {
+        window.history.replaceState(null, '', '#smart-home');
+        activateRoute('smart-home');
+        return;
+      }
       if ((window.vehicleData || []).some(vehicle => vehicle.id === window.location.hash.slice(1))) {
         showTeslaControlPage(window.location.hash.slice(1));
         return;
@@ -938,8 +1050,10 @@
       window.setTimeout(() => showTeslaControlPage(requestedHash), 0);
       return;
     }
-    const initialPage = appRoutes.includes(requestedHash) ? requestedHash : 'home';
-    if (!window.location.hash || !appRoutes.includes(requestedHash)) {
+    const initialPage = getRouteFromHash();
+    if (requestedHash === 'file') {
+      window.history.replaceState(null, '', '#smart-home');
+    } else if (!window.location.hash || !appRoutes.includes(requestedHash)) {
       window.history.replaceState(null, '', '#home');
     }
     activateRoute(initialPage, { restoreScroll: false });
