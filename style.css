@@ -3911,10 +3911,15 @@ textarea:focus {
 .trade-decision-entry-copy span { color: var(--text-secondary); font-size: 12px; line-height: 1.55; }
 .trade-decision-entry-action { color: #3D7A5C; flex: 0 0 auto; font-size: 12px; font-weight: 700; }
 .trade-decision-entry-action b { font-size: 18px; line-height: 0; vertical-align: -1px; }
-.trade-decision-entry { display: grid; gap: 10px; }
+.trade-decision-entry { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }
 .trade-decision-entry-header { align-items: center; background: transparent; border: 0; color: #2F7A55; cursor: pointer; display: flex; font-size: 16px; font-weight: 750; justify-content: space-between; padding: 0 2px; text-align: left; width: 100%; }
 .trade-decision-entry-header span { font-size: 20px; line-height: 1; }
 .trade-decision-entry .trade-decision-card { box-shadow: 0 8px 20px rgba(49, 81, 60, .06); }
+.trade-decision-entry > .trade-decision-entry-header,
+.trade-decision-entry > .trade-decision-card,
+.trade-decision-card,
+.trade-decision-block,
+.trade-decision-expandable { max-width: none; min-width: 0; width: 100%; }
 
 .trade-decision-list { display: grid; gap: 16px; }
 .trade-decision-card {
