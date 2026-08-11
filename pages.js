@@ -934,14 +934,13 @@
     return quote;
   }
 
-  function renderTradeDecisionPage() {
-    const list = document.getElementById('trade-decision-list');
-    if (!list) return;
-
+  function getTradingDecisionView() {
     const decision = window.tradingDecision && typeof window.tradingDecision === 'object'
       ? window.tradingDecision
       : {};
-    const weeklyPosition = decision.weeklyPosition ?? null;
+    const analysis = decision.marketAnalysis && typeof decision.marketAnalysis === 'object'
+      ? decision.marketAnalysis
+      : {};
     const hasValue = value => {
       if (value === null || value === undefined) return false;
       if (typeof value === 'string') return value.trim().length > 0;
@@ -950,7 +949,7 @@
       return true;
     };
     const renderValue = value => {
-      if (!hasValue(value)) return '<span class="trade-decision-missing">待录入</span>';
+      if (!hasValue(value)) return '<span class="trade-decision-missing">暂无数据</span>';
       if (Array.isArray(value)) {
         return `<ul class="trade-decision-values">${value.map(item => `<li>${renderValue(item)}</li>`).join('')}</ul>`;
       }
@@ -966,54 +965,82 @@
       const key = keys.find(name => hasValue(source[name]));
       return key ? source[key] : null;
     };
-    const weeklyProductName = pickValue(weeklyPosition, ['name', 'variety', 'product', '品种名称', '品种']);
-    const levelsProductName = decision.levels && typeof decision.levels === 'object' && !Array.isArray(decision.levels)
-      ? Object.keys(decision.levels).find(hasValue) || null
-      : null;
-    const productName = hasValue(weeklyProductName) ? weeklyProductName : levelsProductName;
-    const weeklyDirection = pickValue(weeklyPosition, ['direction', 'positionDirection', '方向']);
-    const planForProduct = hasValue(productName)
-      && decision.operationPlan
-      && typeof decision.operationPlan === 'object'
-      && !Array.isArray(decision.operationPlan)
-      ? decision.operationPlan[productName]
-      : null;
-    const planDirection = pickValue(planForProduct, ['bias', 'direction', '方向']);
-    const direction = hasValue(weeklyDirection) ? weeklyDirection : planDirection;
+    const weeklyPosition = decision.weeklyPosition ?? analysis.mainPosition ?? null;
+    const levels = decision.levels ?? analysis.technical ?? null;
+    const operationPlan = decision.operationPlan ?? analysis.operation ?? null;
+    const fundamentals = decision.fundamentals ?? analysis.fundamental ?? null;
+    const productName = decision.product ?? decision.variety ?? analysis.product ?? analysis.variety
+      ?? pickValue(weeklyPosition, ['name', 'variety', 'product', '品种名称', '品种']);
+    const direction = decision.trend ?? analysis.trend ?? pickValue(weeklyPosition, ['direction', 'positionDirection', '方向']);
     const directionRaw = hasValue(direction) ? String(direction).trim() : '';
     const directionKey = directionRaw.toLowerCase();
     const longValues = new Set(['多', '多单', 'long', 'buy', '偏多']);
     const shortValues = new Set(['空', '空单', 'short', 'sell', '偏空']);
     const directionText = longValues.has(directionKey)
       ? '偏多'
-      : (shortValues.has(directionKey) ? '偏空' : (directionRaw || '待录入'));
+      : (shortValues.has(directionKey) ? '偏空' : (directionRaw || '暂无数据'));
     const directionClass = shortValues.has(directionKey)
       ? 'is-short'
       : (longValues.has(directionKey) ? 'is-long' : 'is-neutral');
-    const sections = [
-      ['主力持仓', weeklyPosition],
-      ['基本面', decision.fundamentals],
-      ['关键位置', decision.levels],
-      ['操作计划', decision.operationPlan]
-    ];
+    return {
+      hasValue, renderValue, productName, directionText, directionClass,
+      trend: decision.trend ?? analysis.trend ?? null,
+      technical: levels, operation: operationPlan, fundamental: fundamentals, mainPosition: weeklyPosition
+    };
+  }
 
-    list.innerHTML = `
+  function buildTradingDecisionCard(includeExpandable = true) {
+    const view = getTradingDecisionView();
+    const primarySections = [
+      ['当前判断', view.trend],
+      ['关键位置', view.technical],
+      ['操作计划', view.operation]
+    ];
+    const expandableSections = [
+      ['基本面', view.fundamental],
+      ['主力持仓', view.mainPosition]
+    ];
+    return `
       <article class="trade-decision-card">
         <header class="trade-decision-hero">
           <div>
-            <span class="trade-decision-eyebrow">交易决策</span>
-            <h3>${hasValue(productName) ? escapeHTML(productName) : '待录入'}</h3>
+            <span class="trade-decision-eyebrow">品种</span>
+            <h3>${view.hasValue(view.productName) ? escapeHTML(view.productName) : '暂无数据'}</h3>
           </div>
-          <span class="trade-direction-badge ${directionClass}">${escapeHTML(directionText)}</span>
+          <span class="trade-direction-badge ${view.directionClass}">${escapeHTML(view.directionText)}</span>
         </header>
-        ${sections.map(([title, value]) => `
+        ${primarySections.map(([title, value]) => `
           <section class="trade-decision-block" aria-label="${title}">
             <h4>${title}</h4>
-            ${renderValue(value)}
+            ${view.renderValue(value)}
           </section>
         `).join('')}
+        ${includeExpandable ? expandableSections.map(([title, value]) => `
+          <details class="trade-decision-block trade-decision-expandable">
+            <summary>${title}<span>展开</span></summary>
+            ${view.renderValue(value)}
+          </details>
+        `).join('') : ''}
       </article>
     `;
+  }
+
+  function renderHomeTradeDecision() {
+    const container = document.getElementById('home-trade-decision-card');
+    if (!container) return;
+    container.innerHTML = `
+      <button class="trade-decision-entry-header" type="button" data-trade-decision aria-controls="view-trade-decision">
+        <strong id="trade-decision-title">交易决策</strong><span aria-hidden="true">›</span>
+      </button>
+      ${buildTradingDecisionCard(true)}
+    `;
+  }
+
+  function renderTradeDecisionPage() {
+    const list = document.getElementById('trade-decision-list');
+    if (!list) return;
+
+    list.innerHTML = buildTradingDecisionCard(true);
   }
 
   function renderAppPages(options = {}) {
@@ -1029,6 +1056,7 @@
     if (!changedModules || changedModules.has('positions')) renderPositionPage();
     if (!changedModules || changedModules.has('tradingDecision')) {
       renderTradeDecisionPage();
+      renderHomeTradeDecision();
     }
     if (!changedModules || changedModules.has('futuresData') || changedModules.has('meta')) {
       renderMarketWatchPage();

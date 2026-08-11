@@ -44,7 +44,7 @@
       margin: null,
       profit: null,
       risk_rate: null,
-      availableFunds: FIXED_CAPITAL,
+      availableFunds: null,
       floatingPnl: null,
       updatedAt: null,
       source: null
@@ -103,12 +103,19 @@
 
   const normalizeTradingDecision = value => {
     const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    const analysis = source.marketAnalysis && typeof source.marketAnalysis === 'object' && !Array.isArray(source.marketAnalysis)
+      ? source.marketAnalysis
+      : null;
     return {
       ...source,
-      weeklyPosition: source.weeklyPosition ?? null,
-      levels: source.levels ?? null,
-      operationPlan: source.operationPlan ?? null,
-      fundamentals: source.fundamentals ?? null
+      product: source.product ?? source.variety ?? source.品种 ?? analysis?.product ?? analysis?.variety ?? null,
+      marketAnalysis: analysis,
+      // 新版 marketAnalysis 映射到既有字段，旧版读取方与历史数据均可继续使用。
+      weeklyPosition: source.weeklyPosition ?? analysis?.mainPosition ?? null,
+      levels: source.levels ?? analysis?.technical ?? null,
+      operationPlan: source.operationPlan ?? analysis?.operation ?? null,
+      fundamentals: source.fundamentals ?? analysis?.fundamental ?? null,
+      trend: source.trend ?? analysis?.trend ?? null
     };
   };
 
@@ -142,7 +149,7 @@
     const eq = Number.isFinite(equity) ? equity : null;
     const cap = FIXED_CAPITAL;
     const mg = Number.isFinite(margin) ? margin : null;
-    const availableFunds = Number.isFinite(available) ? available : FIXED_CAPITAL;
+    const availableFunds = Number.isFinite(available) ? available : null;
 
     const profit = eq !== null ? eq - cap : null;
     const risk_rate = eq !== null && eq > 0 && mg !== null ? mg / eq : null;

@@ -150,10 +150,10 @@
     const pnlSign = profit > 0 ? '+' : (profit < 0 ? '-' : '');
     const formatAccountAmount = value => toOptionalNumber(value) !== null
       ? `¥${formatMoney(value)}`
-      : '待录入';
+      : '暂无数据';
     const sparkTone = profit !== null && profit < 0 ? 'peach' : 'mint';
     const riskText = riskRate === null || !Number.isFinite(riskRate)
-      ? '待录入'
+      ? '暂无数据'
       : `${riskRate.toFixed(2)}%`;
 
     container.innerHTML = `
@@ -163,7 +163,7 @@
           <span class="account-label">账户权益</span>
           <strong class="account-equity-value">${formatAccountAmount(account.equity)}</strong>
         </div>
-        <span class="account-status-dot"><i aria-hidden="true"></i>${equity !== null ? '已录入' : '待录入'}</span>
+        <span class="account-status-dot"><i aria-hidden="true"></i>${equity !== null ? '已录入' : '暂无数据'}</span>
       </div>
       <div class="account-metric-grid">
         <div>
@@ -172,7 +172,7 @@
         </div>
         <div>
           <span>累计盈亏</span>
-          <strong class="${pnlClass}">${profit !== null ? `${pnlSign}¥${formatMoney(profit)}` : '待录入'}</strong>
+          <strong class="${pnlClass}">${profit !== null ? `${pnlSign}¥${formatMoney(profit)}` : '暂无数据'}</strong>
         </div>
         <div>
           <span>可用资金</span>
@@ -182,7 +182,7 @@
           <span>风险占用</span>
           <strong>${riskText}</strong>
           <div class="account-risk-sub">
-            <em>占用金额 <b>${formatAccountAmount(account.margin)}</b></em>
+            <em>持仓保证金 <b>${formatAccountAmount(account.margin)}</b></em>
             <em>资金使用率 <b>${riskText}</b></em>
           </div>
         </div>
@@ -191,15 +191,11 @@
   }
 
   function formatUpdateTime(value) {
-    if (!value) return '—';
+    if (!value) return '暂无数据';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return String(value);
-    return date.toLocaleString('zh-CN', {
-      month: 'numeric',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const pad = number => String(number).padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 
   /** 有效持仓：有方向或数量>0 */
@@ -296,8 +292,9 @@
     const logs = Array.isArray(window.dailyLogs) ? window.dailyLogs : [];
     const latestLog = logs.find(item => item.domain === 'futures') || logs[0];
 
-    const updatedAt = meta.lastGPTUpdateAt || latestLog?.updatedAt || null;
-    if (updatedEl) updatedEl.textContent = `更新时间 ${formatUpdateTime(updatedAt)}`;
+    // 持仓更新时间只读取 GPT 导入时同步保存的 meta，不以日报或行情时间替代。
+    const updatedAt = meta.lastGPTUpdateAt || null;
+    if (updatedEl) updatedEl.textContent = `数据更新时间：${formatUpdateTime(updatedAt)}`;
     if (subEl) {
       subEl.textContent = latestLog?.date
         ? `交易驾驶中心 · ${latestLog.date}`

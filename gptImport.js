@@ -114,8 +114,17 @@
   }
 
   function extractTradingDecision(payload) {
+    const marketAnalysis = payload?.marketAnalysis;
+    if (marketAnalysis && typeof marketAnalysis === 'object' && !Array.isArray(marketAnalysis)) {
+      return {
+        product: payload.product ?? payload.variety ?? payload.品种 ?? marketAnalysis.product ?? marketAnalysis.variety ?? null,
+        marketAnalysis
+      };
+    }
     if (payload?.tradingDecision && typeof payload.tradingDecision === 'object' && !Array.isArray(payload.tradingDecision)) {
-      return payload.tradingDecision;
+      return payload.tradingDecision.marketAnalysis
+        ? { ...payload.tradingDecision, marketAnalysis: payload.tradingDecision.marketAnalysis }
+        : payload.tradingDecision;
     }
     const hasOriginalFields = ['weeklyPosition', 'levels', 'operationPlan', 'fundamentals']
       .some(key => Object.prototype.hasOwnProperty.call(payload || {}, key));
@@ -138,7 +147,8 @@
       throw new Error('未找到 futures、account 或 tradingDecision 数据。');
     }
 
-    const nowISO = new Date().toISOString();
+    const suppliedUpdatedAt = payload.updatedAt ?? payload.timestamp ?? payload.更新时间;
+    const nowISO = suppliedUpdatedAt ? String(suppliedUpdatedAt) : new Date().toISOString();
     const date = String(payload.date || meta.date || todayLocal()).trim() || todayLocal();
 
     const quoteUpdates = [];

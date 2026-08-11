@@ -11,7 +11,7 @@
     // profit = equity - capital
     // risk_rate = margin / equity
     // availableFunds 用于可用资金展示；floatingPnl 保留旧数据兼容
-    availableFunds: 102000,
+    availableFunds: null,
     floatingPnl: null
   });
 })();

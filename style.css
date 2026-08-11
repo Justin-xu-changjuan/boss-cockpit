@@ -3902,6 +3902,10 @@ textarea:focus {
 .trade-decision-entry-copy span { color: var(--text-secondary); font-size: 12px; line-height: 1.55; }
 .trade-decision-entry-action { color: #3D7A5C; flex: 0 0 auto; font-size: 12px; font-weight: 700; }
 .trade-decision-entry-action b { font-size: 18px; line-height: 0; vertical-align: -1px; }
+.trade-decision-entry { display: grid; gap: 10px; }
+.trade-decision-entry-header { align-items: center; background: transparent; border: 0; color: #2F7A55; cursor: pointer; display: flex; font-size: 16px; font-weight: 750; justify-content: space-between; padding: 0 2px; text-align: left; width: 100%; }
+.trade-decision-entry-header span { font-size: 20px; line-height: 1; }
+.trade-decision-entry .trade-decision-card { box-shadow: 0 8px 20px rgba(49, 81, 60, .06); }
 
 .trade-decision-list { display: grid; gap: 16px; }
 .trade-decision-card {
@@ -3953,6 +3957,10 @@ textarea:focus {
   font-size: 14px;
   margin: 0 0 11px;
 }
+.trade-decision-expandable summary { color: var(--text-primary); cursor: pointer; display: flex; font-size: 14px; font-weight: 750; justify-content: space-between; list-style: none; }
+.trade-decision-expandable summary::-webkit-details-marker { display: none; }
+.trade-decision-expandable summary span { color: var(--text-secondary); font-size: 12px; font-weight: 650; }
+.trade-decision-expandable[open] summary { margin-bottom: 12px; }
 .trade-position-grid { display: grid; gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .trade-position-grid > div,
 .trade-level-grid > div {

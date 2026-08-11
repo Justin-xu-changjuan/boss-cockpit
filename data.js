@@ -28,6 +28,9 @@
   ];
 
   const tradingDecisionDefaults = {
+    product: null,
+    marketAnalysis: null,
+    trend: null,
     weeklyPosition: null,
     levels: null,
     operationPlan: null,
