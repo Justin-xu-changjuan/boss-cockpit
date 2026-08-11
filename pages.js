@@ -8,7 +8,7 @@
  */
 
 (() => {
-  const appRoutes = ['home', 'market-watch', 'tesla', 'smart-home', 'me', 'data', 'position', 'position-input', 'gpt-import'];
+  const appRoutes = ['home', 'market-watch', 'tesla', 'smart-home', 'me', 'data', 'position', 'position-input', 'gpt-import', 'trade-decision'];
   const routeTitles = {
     home: '老板驾驶舱',
     tesla: 'Tesla',
@@ -18,7 +18,8 @@
     position: '我的持仓',
     'position-input': '持仓智能录入',
     'gpt-import': 'GPT智能录入',
-    'market-watch': '市场观察'
+    'market-watch': '市场观察',
+    'trade-decision': '交易决策'
   };
   const scrollPositions = new Map();
   let teslaCommandTimer = null;
@@ -66,6 +67,8 @@
     const targetView = document.getElementById(`view-${targetPage}`);
     if (!targetView) return;
 
+    if (targetPage === 'trade-decision') renderTradeDecisionPage();
+
     if (activeView?.dataset.view === 'tesla-control' && teslaCommandCleanup) {
       teslaCommandCleanup();
     }
@@ -83,7 +86,7 @@
 
     const activeTabPage = targetPage === 'data'
       ? 'me'
-      : (['position', 'position-input', 'gpt-import'].includes(targetPage)
+      : (['position', 'position-input', 'gpt-import', 'trade-decision'].includes(targetPage)
         ? (targetPage === 'gpt-import' ? 'market-watch' : 'home')
         : targetPage);
     document.querySelectorAll('.nav-item').forEach(item => {
@@ -931,6 +934,88 @@
     return quote;
   }
 
+  function renderTradeDecisionPage() {
+    const list = document.getElementById('trade-decision-list');
+    if (!list) return;
+
+    const decision = window.tradingDecision && typeof window.tradingDecision === 'object'
+      ? window.tradingDecision
+      : {};
+    const weeklyPosition = decision.weeklyPosition ?? null;
+    const hasValue = value => {
+      if (value === null || value === undefined) return false;
+      if (typeof value === 'string') return value.trim().length > 0;
+      if (Array.isArray(value)) return value.some(hasValue);
+      if (typeof value === 'object') return Object.values(value).some(hasValue);
+      return true;
+    };
+    const renderValue = value => {
+      if (!hasValue(value)) return '<span class="trade-decision-missing">待录入</span>';
+      if (Array.isArray(value)) {
+        return `<ul class="trade-decision-values">${value.map(item => `<li>${renderValue(item)}</li>`).join('')}</ul>`;
+      }
+      if (typeof value === 'object') {
+        return `<div class="trade-detail-list">${Object.entries(value).map(([key, item]) => `
+          <div><span>${escapeHTML(key)}</span><div class="trade-decision-value">${renderValue(item)}</div></div>
+        `).join('')}</div>`;
+      }
+      return `<span class="trade-decision-value">${escapeHTML(value)}</span>`;
+    };
+    const pickValue = (source, keys) => {
+      if (!source || typeof source !== 'object' || Array.isArray(source)) return null;
+      const key = keys.find(name => hasValue(source[name]));
+      return key ? source[key] : null;
+    };
+    const weeklyProductName = pickValue(weeklyPosition, ['name', 'variety', 'product', '品种名称', '品种']);
+    const levelsProductName = decision.levels && typeof decision.levels === 'object' && !Array.isArray(decision.levels)
+      ? Object.keys(decision.levels).find(hasValue) || null
+      : null;
+    const productName = hasValue(weeklyProductName) ? weeklyProductName : levelsProductName;
+    const weeklyDirection = pickValue(weeklyPosition, ['direction', 'positionDirection', '方向']);
+    const planForProduct = hasValue(productName)
+      && decision.operationPlan
+      && typeof decision.operationPlan === 'object'
+      && !Array.isArray(decision.operationPlan)
+      ? decision.operationPlan[productName]
+      : null;
+    const planDirection = pickValue(planForProduct, ['bias', 'direction', '方向']);
+    const direction = hasValue(weeklyDirection) ? weeklyDirection : planDirection;
+    const directionRaw = hasValue(direction) ? String(direction).trim() : '';
+    const directionKey = directionRaw.toLowerCase();
+    const longValues = new Set(['多', '多单', 'long', 'buy', '偏多']);
+    const shortValues = new Set(['空', '空单', 'short', 'sell', '偏空']);
+    const directionText = longValues.has(directionKey)
+      ? '偏多'
+      : (shortValues.has(directionKey) ? '偏空' : (directionRaw || '待录入'));
+    const directionClass = shortValues.has(directionKey)
+      ? 'is-short'
+      : (longValues.has(directionKey) ? 'is-long' : 'is-neutral');
+    const sections = [
+      ['主力持仓', weeklyPosition],
+      ['基本面', decision.fundamentals],
+      ['关键位置', decision.levels],
+      ['操作计划', decision.operationPlan]
+    ];
+
+    list.innerHTML = `
+      <article class="trade-decision-card">
+        <header class="trade-decision-hero">
+          <div>
+            <span class="trade-decision-eyebrow">交易决策</span>
+            <h3>${hasValue(productName) ? escapeHTML(productName) : '待录入'}</h3>
+          </div>
+          <span class="trade-direction-badge ${directionClass}">${escapeHTML(directionText)}</span>
+        </header>
+        ${sections.map(([title, value]) => `
+          <section class="trade-decision-block" aria-label="${title}">
+            <h4>${title}</h4>
+            ${renderValue(value)}
+          </section>
+        `).join('')}
+      </article>
+    `;
+  }
+
   function renderAppPages(options = {}) {
     const changedModules = Array.isArray(options.changedModules) ? new Set(options.changedModules) : null;
     if (!changedModules || changedModules.has('vehicleData')) renderTeslaFleetPage();
@@ -942,6 +1027,9 @@
       renderGptImportPage();
     }
     if (!changedModules || changedModules.has('positions')) renderPositionPage();
+    if (!changedModules || changedModules.has('tradingDecision')) {
+      renderTradeDecisionPage();
+    }
     if (!changedModules || changedModules.has('futuresData') || changedModules.has('meta')) {
       renderMarketWatchPage();
       // 行情页副标题显示最近 GPT 更新时间
@@ -974,6 +1062,9 @@
     document.querySelector('[data-gpt-import-back]')?.addEventListener('click', () => {
       window.location.hash = 'home';
     });
+    document.querySelector('[data-trade-decision-back]')?.addEventListener('click', () => {
+      window.location.hash = 'home';
+    });
     document.addEventListener('click', event => {
       if (event.target.closest('[data-position-preview]')) window.location.hash = 'position';
       if (event.target.closest('[data-market-watch-card]')) window.location.hash = 'market-watch';
@@ -981,6 +1072,7 @@
         renderGptImportPage();
         window.location.hash = 'gpt-import';
       }
+      if (event.target.closest('[data-trade-decision]')) window.location.hash = 'trade-decision';
     });
     document.querySelectorAll('[data-market-watch]').forEach(button => {
       button.addEventListener('click', () => {

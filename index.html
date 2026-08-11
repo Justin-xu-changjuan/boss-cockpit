@@ -72,12 +72,12 @@
       </div>
     </section>
 
-    <!-- ========== 今日行情：交易驾驶中心（有持仓） ========== -->
+    <!-- ========== 我的持仓：首页概览（读取 positions） ========== -->
     <section class="section today-market-section" aria-labelledby="today-market-title">
       <div class="section-header">
         <div>
-          <h2 class="section-title" id="today-market-title">今日行情</h2>
-          <p class="section-subtitle" id="today-market-subtitle">我的交易驾驶中心</p>
+          <h2 class="section-title" id="today-market-title">我的持仓</h2>
+          <p class="section-subtitle" id="today-market-subtitle">品种 · 合约 · 方向 · 手数 · 成本 · 当前价格 · 浮盈亏 · 操作计划</p>
         </div>
         <div class="section-actions">
           <button class="section-action" type="button" data-gpt-import aria-controls="view-gpt-import">GPT智能录入</button>
@@ -105,8 +105,38 @@
       </div>
     </section>
 
+    <!-- ========== 交易决策：首页入口，不加入底部导航 ========== -->
+    <section class="section trade-decision-section" aria-labelledby="trade-decision-title">
+      <button class="trade-decision-entry" type="button" data-trade-decision aria-controls="view-trade-decision">
+        <span class="trade-decision-entry-copy">
+          <strong id="trade-decision-title">交易决策</strong>
+          <span>主力持仓 · 基本面 · 关键位置 · 操作计划</span>
+        </span>
+        <span class="trade-decision-entry-action">查看详情 <b aria-hidden="true">›</b></span>
+      </button>
+    </section>
+
   </main>
   </div>
+
+  <!-- ========== 交易决策详情页（非底部导航） ========== -->
+  <section class="app-view secondary-view trade-decision-view" id="view-trade-decision" data-view="trade-decision" hidden>
+    <header class="view-header">
+      <button class="view-back-button" type="button" data-trade-decision-back>返回首页</button>
+      <h1 class="view-title">交易决策</h1>
+      <p class="view-subtitle">主力持仓、基本面、关键位置与操作计划</p>
+    </header>
+    <main class="view-main">
+      <section class="view-section" aria-labelledby="trade-decision-page-title">
+        <div class="view-section-heading">
+          <h2 class="view-section-title" id="trade-decision-page-title">交易决策</h2>
+        </div>
+        <div class="trade-decision-list" id="trade-decision-list">
+          <!-- 直接读取 futuresData 与 positions，由 JS 渲染 -->
+        </div>
+      </section>
+    </main>
+  </section>
 
   <!-- ========== 我的持仓页面 ========== -->
   <section class="app-view secondary-view position-page-view" id="view-position" data-view="position" hidden>

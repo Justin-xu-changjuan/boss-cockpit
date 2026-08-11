@@ -3877,3 +3877,133 @@ textarea:focus {
   position: relative;
   z-index: 1;
 }
+
+/* 交易决策：首页仅追加入口，沿用现有浅色卡片语言。 */
+.trade-decision-section { margin-top: 2px; }
+.trade-decision-entry {
+  align-items: center;
+  background: linear-gradient(135deg, #F3FBF6, #FFFFFF);
+  border: 1px solid #DDEDE3;
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 20px rgba(46, 91, 64, 0.07);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  min-height: 82px;
+  padding: 15px 16px;
+  text-align: left;
+  width: 100%;
+}
+.trade-decision-entry:active { transform: scale(.99); }
+.trade-decision-entry-copy { display: grid; gap: 5px; min-width: 0; }
+.trade-decision-entry-copy strong { color: #2F7A55; font-size: 16px; }
+.trade-decision-entry-copy span { color: var(--text-secondary); font-size: 12px; line-height: 1.55; }
+.trade-decision-entry-action { color: #3D7A5C; flex: 0 0 auto; font-size: 12px; font-weight: 700; }
+.trade-decision-entry-action b { font-size: 18px; line-height: 0; vertical-align: -1px; }
+
+.trade-decision-list { display: grid; gap: 16px; }
+.trade-decision-card {
+  background: #FFFFFF;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: 0 10px 26px rgba(47, 74, 58, 0.08);
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+.trade-decision-hero {
+  align-items: center;
+  background: linear-gradient(135deg, #E9F7EE, #F8FBF9);
+  border-radius: 18px;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 16px;
+}
+.trade-decision-eyebrow {
+  color: var(--text-secondary);
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  margin-bottom: 4px;
+}
+.trade-decision-hero h3 { color: var(--text-primary); font-size: 21px; margin: 0; }
+.trade-direction-badge {
+  background: #DDF2E5;
+  border-radius: 999px;
+  color: #2F7A55;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 11px;
+}
+.trade-direction-badge.is-short { background: #FDE8E8; color: #C24B47; }
+.trade-direction-badge.is-neutral { background: #EEEAE3; color: var(--text-secondary); }
+.trade-decision-block {
+  background: #FAF9F7;
+  border: 1px solid #EEEAE3;
+  border-radius: 18px;
+  padding: 14px;
+}
+.trade-decision-block h4 {
+  color: var(--text-primary);
+  font-size: 14px;
+  margin: 0 0 11px;
+}
+.trade-position-grid { display: grid; gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.trade-position-grid > div,
+.trade-level-grid > div {
+  background: #FFFFFF;
+  border-radius: 13px;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px;
+}
+.trade-position-grid span,
+.trade-level-grid span,
+.trade-detail-list span { color: var(--text-secondary); font-size: 11px; }
+.trade-position-grid strong,
+.trade-level-grid strong,
+.trade-detail-list strong {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 720;
+  overflow-wrap: anywhere;
+}
+.trade-position-grid .is-profit { color: #2F7A55; }
+.trade-position-grid .is-loss { color: #C24B47; }
+.trade-level-grid { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.trade-detail-list { display: grid; gap: 0; }
+.trade-detail-list > div {
+  align-items: start;
+  border-bottom: 1px solid #ECE8E1;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 72px minmax(0, 1fr);
+  padding: 10px 2px;
+}
+.trade-detail-list > div:first-child { padding-top: 2px; }
+.trade-detail-list > div:last-child { border-bottom: 0; padding-bottom: 2px; }
+.trade-plan-list strong { line-height: 1.55; }
+.trade-decision-value { color: var(--text-primary); font-size: 13px; font-weight: 720; line-height: 1.55; overflow-wrap: anywhere; }
+.trade-decision-missing { color: var(--text-tertiary); font-size: 13px; font-weight: 650; }
+.trade-decision-values { display: grid; gap: 7px; list-style-position: inside; margin: 0; padding: 0; }
+.trade-decision-values li { color: var(--text-primary); font-size: 13px; line-height: 1.55; }
+.trade-decision-empty {
+  background: #FFFFFF;
+  border: 1px dashed #D9D5CE;
+  border-radius: 18px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 24px 18px;
+  text-align: center;
+}
+
+@media (max-width: 390px) {
+  .trade-position-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -27,6 +27,14 @@
     { id: 'door-lock', name: '门锁', type: 'placeholder' }
   ];
 
+  const tradingDecisionDefaults = {
+    weeklyPosition: null,
+    levels: null,
+    operationPlan: null,
+    fundamentals: null
+  };
+
+  window.BossData.register('tradingDecision', tradingDecisionDefaults);
   window.BossData.register('positions', positionsDefaults);
   window.BossData.register('fileEntries', fileEntriesDefaults);
   window.BossData.register('homeDevices', homeDevicesDefaults);

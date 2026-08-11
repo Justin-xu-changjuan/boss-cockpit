@@ -124,28 +124,36 @@
     if (!container) return;
 
     const account = window.accountData || {};
-    const equity = Number(account.equity);
-    const capital = Number(account.capital);
-    const margin = Number(account.margin);
+    const toOptionalNumber = value => {
+      if (value === null || value === undefined || value === '') return null;
+      const number = Number(value);
+      return Number.isFinite(number) ? number : null;
+    };
+    const equity = toOptionalNumber(account.equity);
+    const capital = toOptionalNumber(account.capital);
+    const margin = toOptionalNumber(account.margin);
+    const availableFunds = toOptionalNumber(account.availableFunds);
     // 累计盈亏 = 账户权益 - 本金（优先用规范化后的 profit）
-    const profit = Number.isFinite(Number(account.profit))
-      ? Number(account.profit)
-      : (Number.isFinite(equity) && Number.isFinite(capital) ? equity - capital : NaN);
+    const normalizedProfit = toOptionalNumber(account.profit);
+    const profit = normalizedProfit !== null
+      ? normalizedProfit
+      : (equity !== null && capital !== null ? equity - capital : null);
     // 风险占用率 = 持仓保证金 ÷ 账户权益
-    const riskRate = Number.isFinite(Number(account.risk_rate))
-      ? Number(account.risk_rate) * (Number(account.risk_rate) <= 1 ? 100 : 1)
-      : (Number.isFinite(equity) && equity > 0 && Number.isFinite(margin) ? (margin / equity) * 100 : null);
+    const normalizedRiskRate = toOptionalNumber(account.risk_rate);
+    const riskRate = normalizedRiskRate !== null
+      ? normalizedRiskRate * (normalizedRiskRate <= 1 ? 100 : 1)
+      : (equity !== null && equity > 0 && margin !== null ? (margin / equity) * 100 : null);
 
-    const pnlClass = Number.isFinite(profit)
+    const pnlClass = profit !== null
       ? (profit >= 0 ? 'account-value-up' : 'account-value-down')
       : '';
     const pnlSign = profit > 0 ? '+' : (profit < 0 ? '-' : '');
-    const formatAccountAmount = value => Number.isFinite(Number(value))
+    const formatAccountAmount = value => toOptionalNumber(value) !== null
       ? `¥${formatMoney(value)}`
-      : '待接入';
-    const sparkTone = Number.isFinite(profit) && profit < 0 ? 'peach' : 'mint';
+      : '待录入';
+    const sparkTone = profit !== null && profit < 0 ? 'peach' : 'mint';
     const riskText = riskRate === null || !Number.isFinite(riskRate)
-      ? '待接入'
+      ? '待录入'
       : `${riskRate.toFixed(2)}%`;
 
     container.innerHTML = `
@@ -155,7 +163,7 @@
           <span class="account-label">账户权益</span>
           <strong class="account-equity-value">${formatAccountAmount(account.equity)}</strong>
         </div>
-        <span class="account-status-dot"><i aria-hidden="true"></i>运行正常</span>
+        <span class="account-status-dot"><i aria-hidden="true"></i>${equity !== null ? '已录入' : '待录入'}</span>
       </div>
       <div class="account-metric-grid">
         <div>
@@ -164,7 +172,11 @@
         </div>
         <div>
           <span>累计盈亏</span>
-          <strong class="${pnlClass}">${Number.isFinite(profit) ? `${pnlSign}¥${formatMoney(profit)}` : '待接入'}</strong>
+          <strong class="${pnlClass}">${profit !== null ? `${pnlSign}¥${formatMoney(profit)}` : '待录入'}</strong>
+        </div>
+        <div>
+          <span>可用资金</span>
+          <strong>${formatAccountAmount(availableFunds)}</strong>
         </div>
         <div class="account-metric-risk">
           <span>风险占用</span>

@@ -5,7 +5,8 @@
  */
 (() => {
   const STORAGE_KEY = 'boss-cockpit-data-v1';
-  const modules = ['futuresData', 'vehicleData', 'accountData', 'positions', 'fileEntries', 'homeDevices', 'dailyLogs', 'meta'];
+  const FIXED_CAPITAL = 102000;
+  const modules = ['futuresData', 'vehicleData', 'accountData', 'tradingDecision', 'positions', 'fileEntries', 'homeDevices', 'dailyLogs', 'meta'];
   let stored = {};
 
   try {
@@ -13,9 +14,46 @@
   } catch (error) {
     console.warn('[BossData] localStorage 不可用，将使用当前会话数据。', error);
   }
+  const isLegacyDemoAccountSnapshot = value => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+    const allowedKeys = new Set([
+      'equity', 'capital', 'margin', 'profit', 'risk_rate',
+      'availableFunds', 'floatingPnl', 'updatedAt', 'source'
+    ]);
+    if (Object.keys(value).some(key => !allowedKeys.has(key))) return false;
+    if (value.source || value.updatedAt) return false;
+    if (Number(value.equity) !== 5e5 || Number(value.margin) !== 137500) return false;
+
+    const isEarlySnapshot = value.capital === undefined
+      && value.profit === undefined
+      && value.risk_rate === undefined
+      && Number(value.availableFunds) === 362500
+      && (value.floatingPnl === undefined || Number(value.floatingPnl) === 750);
+    const isNormalizedSnapshot = Number(value.capital) === FIXED_CAPITAL
+      && Number(value.profit) === 398000
+      && Number(value.risk_rate) === 0.275
+      && Number(value.floatingPnl) === 398000
+      && (value.availableFunds === null || Number(value.availableFunds) === 362500);
+    return isEarlySnapshot || isNormalizedSnapshot;
+  };
+  const needsLegacyAccountMigration = isLegacyDemoAccountSnapshot(stored.accountData);
+  if (needsLegacyAccountMigration) {
+    stored.accountData = {
+      equity: null,
+      capital: FIXED_CAPITAL,
+      margin: null,
+      profit: null,
+      risk_rate: null,
+      availableFunds: FIXED_CAPITAL,
+      floatingPnl: null,
+      updatedAt: null,
+      source: null
+    };
+  }
   const storedEntries = Object.entries(stored);
   stored = Object.fromEntries(storedEntries.filter(([moduleName]) => modules.includes(moduleName)));
-  const needsStorageCleanup = storedEntries.length !== Object.keys(stored).length;
+  const needsStorageCleanup = needsLegacyAccountMigration
+    || storedEntries.length !== Object.keys(stored).length;
 
   const clone = value => JSON.parse(JSON.stringify(value));
 
@@ -63,35 +101,48 @@
     lastGPTMessage: value?.lastGPTMessage ?? null
   });
 
+  const normalizeTradingDecision = value => {
+    const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+    return {
+      ...source,
+      weeklyPosition: source.weeklyPosition ?? null,
+      levels: source.levels ?? null,
+      operationPlan: source.operationPlan ?? null,
+      fundamentals: source.fundamentals ?? null
+    };
+  };
+
   const normalize = (moduleName, value) => {
     if (moduleName === 'futuresData') return normalizeFutures(value);
     if (moduleName === 'positions') return normalizePositions(value);
     if (moduleName === 'dailyLogs') return normalizeDailyLogs(value);
     if (moduleName === 'meta') return normalizeMeta(value || {});
+    if (moduleName === 'tradingDecision') return normalizeTradingDecision(value);
     if (moduleName === 'accountData') {
       return normalizeAccount(value);
     }
     return value;
   };
 
-  /** 账户：本金可改；累计盈亏/风险占用率自动计算 */
+  /** 账户：本金固定；累计盈亏/风险占用率自动计算 */
   const normalizeAccount = value => {
     const equityRaw = value?.equity;
-    const capitalRaw = value?.capital ?? value?.principal;
     const marginRaw = value?.margin ?? value?.occupiedMargin ?? value?.risk_amount;
+    const availableRaw = value?.availableFunds ?? value?.available ?? value?.available_funds;
     const equity = equityRaw === null || equityRaw === undefined || equityRaw === ''
       ? null
       : Number(equityRaw);
-    const capital = capitalRaw === null || capitalRaw === undefined || capitalRaw === ''
-      ? 102000
-      : Number(capitalRaw);
     const margin = marginRaw === null || marginRaw === undefined || marginRaw === ''
       ? null
       : Number(marginRaw);
+    const available = availableRaw === null || availableRaw === undefined || availableRaw === ''
+      ? null
+      : Number(availableRaw);
 
     const eq = Number.isFinite(equity) ? equity : null;
-    const cap = Number.isFinite(capital) ? capital : 102000;
+    const cap = FIXED_CAPITAL;
     const mg = Number.isFinite(margin) ? margin : null;
+    const availableFunds = Number.isFinite(available) ? available : FIXED_CAPITAL;
 
     const profit = eq !== null ? eq - cap : null;
     const risk_rate = eq !== null && eq > 0 && mg !== null ? mg / eq : null;
@@ -104,7 +155,7 @@
       profit,
       risk_rate,
       // 兼容旧字段：floatingPnl 同步为累计盈亏
-      availableFunds: value?.availableFunds ?? null,
+      availableFunds,
       floatingPnl: profit,
       updatedAt: value?.updatedAt ?? null,
       source: value?.source ?? null
@@ -131,7 +182,7 @@
       : defaults;
     stored[moduleName] = clone(normalize(moduleName, value));
     window[moduleName] = clone(stored[moduleName]);
-    if (hasStoredValue && ['futuresData', 'positions', 'dailyLogs', 'meta'].includes(moduleName)) save();
+    if (hasStoredValue && ['futuresData', 'positions', 'accountData', 'tradingDecision', 'dailyLogs', 'meta'].includes(moduleName)) save();
     return window[moduleName];
   };
 
@@ -227,22 +278,26 @@
     return { total: logs.length, date };
   };
 
-  /** 合并账户字段：只覆盖传入的非空字段；profit/risk_rate 始终重算 */
-  const mergeAccount = (incoming = {}) => {
+  /** 合并账户字段：本金固定，只覆盖传入的真实账户字段；profit/risk_rate 始终重算 */
+  const mergeAccount = (incoming = {}, options = {}) => {
     const current = normalizeAccount(stored.accountData || {});
     const next = { ...current };
     if (incoming.equity !== undefined && incoming.equity !== null && incoming.equity !== '') {
       next.equity = Number(incoming.equity);
     }
-    if (incoming.capital !== undefined && incoming.capital !== null && incoming.capital !== '') {
-      next.capital = Number(incoming.capital);
-    }
     if (incoming.margin !== undefined && incoming.margin !== null && incoming.margin !== '') {
       next.margin = Number(incoming.margin);
+    }
+    if (incoming.availableFunds !== undefined && incoming.availableFunds !== null && incoming.availableFunds !== '') {
+      next.availableFunds = Number(incoming.availableFunds);
     }
     if (incoming.updatedAt) next.updatedAt = incoming.updatedAt;
     if (incoming.source) next.source = incoming.source;
     applyModule('accountData', next);
+    if (options.persist !== false) {
+      save();
+      emit({ module: 'accountData', source: incoming.source || 'manual' });
+    }
     return normalizeAccount(stored.accountData);
   };
 
@@ -258,11 +313,20 @@
     const quotes = Array.isArray(payload?.quotes) ? payload.quotes : [];
     const positions = Array.isArray(payload?.positions) ? payload.positions : [];
     const account = payload?.account && typeof payload.account === 'object' ? payload.account : null;
+    const tradingDecision = payload?.tradingDecision && typeof payload.tradingDecision === 'object'
+      ? payload.tradingDecision
+      : null;
     const domain = payload?.domain || 'futures';
 
     const quoteStats = quotes.length ? mergeQuotes(quotes) : { added: 0, updated: 0, total: (stored.futuresData || []).length };
     const positionStats = positions.length ? mergePositions(positions) : { added: 0, updated: 0, total: (stored.positions || []).length };
-    const accountResult = account ? mergeAccount({ ...account, updatedAt, source: 'gpt' }) : null;
+    const accountResult = account
+      ? mergeAccount({ ...account, updatedAt, source: 'gpt' }, { persist: false })
+      : null;
+    const tradingDecisionResult = tradingDecision
+      ? normalizeTradingDecision(tradingDecision)
+      : null;
+    if (tradingDecisionResult) applyModule('tradingDecision', tradingDecisionResult);
 
     upsertDailyLog({
       date,
@@ -292,12 +356,14 @@
     if (quotes.length) modules.push('futuresData');
     if (positions.length) modules.push('positions');
     if (accountResult) modules.push('accountData');
+    if (tradingDecisionResult) modules.push('tradingDecision');
     emit({ modules, source: 'gpt' });
 
     return {
       quotes: quoteStats,
       positions: positionStats,
       account: accountResult,
+      tradingDecision: tradingDecisionResult,
       date,
       updatedAt
     };
@@ -324,7 +390,12 @@
     if (!Object.keys(imported).length) throw new Error('未找到可导入的数据模块。');
 
     const importedModules = Object.keys(imported);
-    Object.entries(imported).forEach(([moduleName, value]) => applyModule(moduleName, value));
+    Object.entries(imported).forEach(([moduleName, value]) => {
+      const importValue = moduleName === 'accountData' && value && typeof value === 'object'
+        ? { ...value, updatedAt: new Date().toISOString(), source: 'json' }
+        : value;
+      applyModule(moduleName, importValue);
+    });
     save();
     emit({ modules: importedModules });
     return importedModules;

@@ -78,7 +78,7 @@
     return `${y}-${m}-${day}`;
   }
 
-  /** 从 payload 提取账户字段（equity / capital / margin） */
+  /** 从 payload 提取账户字段（本金字段兼容读取，但数据层固定为 102000） */
   function extractAccount(payload) {
     const src = payload?.account && typeof payload.account === 'object'
       ? payload.account
@@ -99,23 +99,43 @@
       ?? src.risk_amount
       ?? src.风险占用
     );
+    const availableFunds = toNumber(
+      src.availableFunds ?? src.available_funds ?? src.可用资金 ?? src.available
+    );
 
     // 至少有一个账户字段才算账户更新
-    if (equity === null && capital === null && margin === null) return null;
+    if (equity === null && capital === null && margin === null && availableFunds === null) return null;
     const account = {};
     if (equity !== null) account.equity = equity;
     if (capital !== null) account.capital = capital;
     if (margin !== null) account.margin = margin;
+    if (availableFunds !== null) account.availableFunds = availableFunds;
     return account;
+  }
+
+  function extractTradingDecision(payload) {
+    if (payload?.tradingDecision && typeof payload.tradingDecision === 'object' && !Array.isArray(payload.tradingDecision)) {
+      return payload.tradingDecision;
+    }
+    const hasOriginalFields = ['weeklyPosition', 'levels', 'operationPlan', 'fundamentals']
+      .some(key => Object.prototype.hasOwnProperty.call(payload || {}, key));
+    if (!hasOriginalFields) return null;
+    return {
+      weeklyPosition: payload.weeklyPosition ?? null,
+      levels: payload.levels ?? null,
+      operationPlan: payload.operationPlan ?? null,
+      fundamentals: payload.fundamentals ?? null
+    };
   }
 
   /** 期货域：GPT futures[] + 可选 account → 行情 + 持仓 + 账户 + 当日日志 */
   function handleFuturesDomain(payload, meta) {
     const list = Array.isArray(payload.futures) ? payload.futures : [];
     const account = extractAccount(payload);
+    const tradingDecision = extractTradingDecision(payload);
 
-    if (!list.length && !account) {
-      throw new Error('未找到 futures 数组或 account 账户字段。');
+    if (!list.length && !account && !tradingDecision) {
+      throw new Error('未找到 futures、account 或 tradingDecision 数据。');
     }
 
     const nowISO = new Date().toISOString();
@@ -175,7 +195,7 @@
       }
     });
 
-    if (!quoteUpdates.length && !account) throw new Error('没有可识别的合约或账户数据。');
+    if (!quoteUpdates.length && !account && !tradingDecision) throw new Error('没有可识别的数据。');
 
     const result = window.BossData.applyGPTImport({
       domain: 'futures',
@@ -184,6 +204,7 @@
       quotes: quoteUpdates,
       positions: positionUpdates,
       account,
+      tradingDecision,
       rawCount: list.length
     });
 
@@ -197,6 +218,9 @@
     if (result.account) {
       parts.push('账户');
     }
+    if (result.tradingDecision) {
+      parts.push('交易决策');
+    }
 
     return {
       domain: 'futures',
@@ -205,6 +229,7 @@
       quotes: result.quotes,
       positions: result.positions,
       account: result.account,
+      tradingDecision: result.tradingDecision,
       skipped,
       message: parts.length
         ? `已更新 ${parts.join('，')}（${date}）`
@@ -216,9 +241,11 @@
   // 单独 account 域：只更新账户
   DOMAIN_HANDLERS.account = (payload, meta) => {
     const account = extractAccount(payload);
-    if (!account) throw new Error('未找到账户字段 equity / capital / margin。');
+    if (!account) throw new Error('未找到账户字段 equity / capital / margin / availableFunds。');
     return handleFuturesDomain({ ...payload, account, futures: payload.futures || [] }, meta);
   };
+  DOMAIN_HANDLERS.tradingdecision = (payload, meta) => handleFuturesDomain(payload, meta);
+  DOMAIN_HANDLERS['trading-decision'] = DOMAIN_HANDLERS.tradingdecision;
 
   // 预留扩展域（尚未实现具体写入，避免误用时报清晰错误）
   ['stocks', 'tesla', 'projects', 'finance', 'journal'].forEach(domain => {
@@ -238,7 +265,7 @@
     if (domainHint && DOMAIN_HANDLERS[domainHint]) {
       return DOMAIN_HANDLERS[domainHint](payload, { date: payload.date });
     }
-    if (Array.isArray(payload.futures) || payload.account) {
+    if (Array.isArray(payload.futures) || payload.account || extractTradingDecision(payload)) {
       return DOMAIN_HANDLERS.futures(payload, { date: payload.date });
     }
     // 顶层直接给 equity/margin 也视为账户更新
@@ -246,9 +273,11 @@
       payload.equity !== undefined
       || payload.capital !== undefined
       || payload.margin !== undefined
+      || payload.availableFunds !== undefined
       || payload.账户权益 !== undefined
       || payload.本金 !== undefined
       || payload.持仓保证金 !== undefined
+      || payload.可用资金 !== undefined
     ) {
       return DOMAIN_HANDLERS.account(payload, { date: payload.date });
     }
@@ -273,11 +302,6 @@
     // 给页面展示用的示例
     sampleFuturesJSON: `{
   "date": "2026-08-10",
-  "account": {
-    "equity": 520000,
-    "capital": 102000,
-    "margin": 140000
-  },
   "futures": [
     {
       "name": "螺纹钢",
