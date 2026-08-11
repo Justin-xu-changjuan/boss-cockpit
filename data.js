@@ -28,13 +28,12 @@
   ];
 
   const tradingDecisionDefaults = {
-    product: null,
-    marketAnalysis: null,
-    trend: null,
-    weeklyPosition: null,
-    levels: null,
-    operationPlan: null,
-    fundamentals: null
+    symbol: null,
+    currentView: null,
+    mainPosition: { priceChange: null, openInterestChange: null, volume: null, analysis: null, capitalSignal: null },
+    fundamental: { supply: null, demand: null, inventory: null, policy: null },
+    technical: { support: null, pressure: null },
+    operation: { strategy: null, shortTerm: null, mediumTerm: null, risk: null }
   };
 
   window.BossData.register('tradingDecision', tradingDecisionDefaults);

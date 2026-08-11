@@ -114,26 +114,32 @@
   }
 
   function extractTradingDecision(payload) {
-    const marketAnalysis = payload?.marketAnalysis;
-    if (marketAnalysis && typeof marketAnalysis === 'object' && !Array.isArray(marketAnalysis)) {
-      return {
-        product: payload.product ?? payload.variety ?? payload.品种 ?? marketAnalysis.product ?? marketAnalysis.variety ?? null,
-        marketAnalysis
-      };
-    }
-    if (payload?.tradingDecision && typeof payload.tradingDecision === 'object' && !Array.isArray(payload.tradingDecision)) {
-      return payload.tradingDecision.marketAnalysis
-        ? { ...payload.tradingDecision, marketAnalysis: payload.tradingDecision.marketAnalysis }
-        : payload.tradingDecision;
-    }
-    const hasOriginalFields = ['weeklyPosition', 'levels', 'operationPlan', 'fundamentals']
-      .some(key => Object.prototype.hasOwnProperty.call(payload || {}, key));
-    if (!hasOriginalFields) return null;
+    const source = payload?.tradingDecision && typeof payload.tradingDecision === 'object' && !Array.isArray(payload.tradingDecision)
+      ? payload.tradingDecision
+      : payload;
+    if (!source || typeof source !== 'object' || Array.isArray(source)) return null;
+
+    const legacyAnalysis = source.marketAnalysis && typeof source.marketAnalysis === 'object' && !Array.isArray(source.marketAnalysis)
+      ? source.marketAnalysis
+      : (payload?.marketAnalysis && typeof payload.marketAnalysis === 'object' && !Array.isArray(payload.marketAnalysis)
+        ? payload.marketAnalysis
+        : {});
+    const hasDecision = ['tradingDecision', 'marketAnalysis', 'symbol', 'currentView', 'mainPosition', 'fundamental', 'technical', 'operation', 'weeklyPosition', 'levels', 'operationPlan', 'fundamentals']
+      .some(key => Object.prototype.hasOwnProperty.call(payload || {}, key) || Object.prototype.hasOwnProperty.call(source, key));
+    if (!hasDecision) return null;
+
+    // 兼容旧 GPT 输入仅发生在导入边界；保存和渲染均只使用以下规范结构。
+    const section = (value, fields) => {
+      const input = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+      return Object.fromEntries(fields.map(field => [field, input[field] ?? null]));
+    };
     return {
-      weeklyPosition: payload.weeklyPosition ?? null,
-      levels: payload.levels ?? null,
-      operationPlan: payload.operationPlan ?? null,
-      fundamentals: payload.fundamentals ?? null
+      symbol: source.symbol ?? source.product ?? source.variety ?? source.品种 ?? legacyAnalysis.symbol ?? legacyAnalysis.product ?? legacyAnalysis.variety ?? null,
+      currentView: source.currentView ?? source.trend ?? legacyAnalysis.currentView ?? legacyAnalysis.trend ?? null,
+      mainPosition: section(source.mainPosition ?? source.weeklyPosition ?? legacyAnalysis.mainPosition, ['priceChange', 'openInterestChange', 'volume', 'analysis', 'capitalSignal']),
+      fundamental: section(source.fundamental ?? source.fundamentals ?? legacyAnalysis.fundamental, ['supply', 'demand', 'inventory', 'policy']),
+      technical: section(source.technical ?? source.levels ?? legacyAnalysis.technical, ['support', 'pressure']),
+      operation: section(source.operation ?? source.operationPlan ?? legacyAnalysis.operation, ['strategy', 'shortTerm', 'mediumTerm', 'risk'])
     };
   }
 

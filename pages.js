@@ -938,9 +938,6 @@
     const decision = window.tradingDecision && typeof window.tradingDecision === 'object'
       ? window.tradingDecision
       : {};
-    const analysis = decision.marketAnalysis && typeof decision.marketAnalysis === 'object'
-      ? decision.marketAnalysis
-      : {};
     const hasValue = value => {
       if (value === null || value === undefined) return false;
       if (typeof value === 'string') return value.trim().length > 0;
@@ -960,54 +957,36 @@
       }
       return `<span class="trade-decision-value">${escapeHTML(value)}</span>`;
     };
-    const pickValue = (source, keys) => {
-      if (!source || typeof source !== 'object' || Array.isArray(source)) return null;
-      const key = keys.find(name => hasValue(source[name]));
-      return key ? source[key] : null;
-    };
-    const weeklyPosition = decision.weeklyPosition ?? analysis.mainPosition ?? null;
-    const levels = decision.levels ?? analysis.technical ?? null;
-    const operationPlan = decision.operationPlan ?? analysis.operation ?? null;
-    const fundamentals = decision.fundamentals ?? analysis.fundamental ?? null;
-    const productName = decision.product ?? decision.variety ?? analysis.product ?? analysis.variety
-      ?? pickValue(weeklyPosition, ['name', 'variety', 'product', '品种名称', '品种']);
-    const direction = decision.trend ?? analysis.trend ?? pickValue(weeklyPosition, ['direction', 'positionDirection', '方向']);
-    const directionRaw = hasValue(direction) ? String(direction).trim() : '';
-    const directionKey = directionRaw.toLowerCase();
-    const longValues = new Set(['多', '多单', 'long', 'buy', '偏多']);
-    const shortValues = new Set(['空', '空单', 'short', 'sell', '偏空']);
-    const directionText = longValues.has(directionKey)
-      ? '偏多'
-      : (shortValues.has(directionKey) ? '偏空' : (directionRaw || '暂无数据'));
-    const directionClass = shortValues.has(directionKey)
-      ? 'is-short'
-      : (longValues.has(directionKey) ? 'is-long' : 'is-neutral');
     return {
-      hasValue, renderValue, productName, directionText, directionClass,
-      trend: decision.trend ?? analysis.trend ?? null,
-      technical: levels, operation: operationPlan, fundamental: fundamentals, mainPosition: weeklyPosition
+      hasValue, renderValue,
+      symbol: decision.symbol ?? null,
+      currentView: decision.currentView ?? null,
+      technical: decision.technical ?? {},
+      operation: decision.operation ?? {},
+      fundamental: decision.fundamental ?? {},
+      mainPosition: decision.mainPosition ?? {}
     };
   }
 
   function buildTradingDecisionCard(includeExpandable = true) {
     const view = getTradingDecisionView();
     const primarySections = [
-      ['当前判断', view.trend],
-      ['关键位置', view.technical],
-      ['操作计划', view.operation]
+      ['当前观点', view.currentView],
+      ['技术面', { 支撑位: view.technical.support, 压力位: view.technical.pressure }],
+      ['操作策略', { 策略: view.operation.strategy, 短期: view.operation.shortTerm, 中期: view.operation.mediumTerm, 风险: view.operation.risk }]
     ];
     const expandableSections = [
-      ['基本面', view.fundamental],
-      ['主力持仓', view.mainPosition]
+      ['基本面', { 供应: view.fundamental.supply, 需求: view.fundamental.demand, 库存: view.fundamental.inventory, 政策: view.fundamental.policy }],
+      ['主力持仓', { 价格变动: view.mainPosition.priceChange, 持仓量变动: view.mainPosition.openInterestChange, 成交量: view.mainPosition.volume, 分析: view.mainPosition.analysis, 资金信号: view.mainPosition.capitalSignal }]
     ];
     return `
       <article class="trade-decision-card">
         <header class="trade-decision-hero">
           <div>
             <span class="trade-decision-eyebrow">品种</span>
-            <h3>${view.hasValue(view.productName) ? escapeHTML(view.productName) : '暂无数据'}</h3>
+            <h3>${view.hasValue(view.symbol) ? escapeHTML(view.symbol) : '暂无数据'}</h3>
           </div>
-          <span class="trade-direction-badge ${view.directionClass}">${escapeHTML(view.directionText)}</span>
+          <span class="trade-direction-badge is-neutral">${view.hasValue(view.currentView) ? escapeHTML(view.currentView) : '暂无数据'}</span>
         </header>
         ${primarySections.map(([title, value]) => `
           <section class="trade-decision-block" aria-label="${title}">

@@ -163,7 +163,7 @@
           <span class="account-label">账户权益</span>
           <strong class="account-equity-value">${formatAccountAmount(account.equity)}</strong>
         </div>
-        <span class="account-status-dot"><i aria-hidden="true"></i>${equity !== null ? '已录入' : '暂无数据'}</span>
+        <span class="account-status-dot"><i aria-hidden="true"></i>${equity !== null ? (account.source === 'gpt' ? 'GPT录入' : '已录入') : '暂无数据'}</span>
       </div>
       <div class="account-metric-grid">
         <div>

@@ -76,12 +76,11 @@
     <section class="section today-market-section" aria-labelledby="today-market-title">
       <div class="section-header">
         <div>
-          <h2 class="section-title" id="today-market-title">我的持仓</h2>
+          <div class="section-title-with-meta"><h2 class="section-title" id="today-market-title">我的持仓</h2><span class="section-meta" id="today-market-updated">数据更新时间：暂无数据</span></div>
           <p class="section-subtitle" id="today-market-subtitle">品种 · 合约 · 方向 · 手数 · 成本 · 当前价格 · 浮盈亏 · 操作计划</p>
         </div>
         <div class="section-actions">
           <button class="section-action" type="button" data-gpt-import aria-controls="view-gpt-import">GPT智能录入</button>
-          <span class="section-meta" id="today-market-updated">数据更新时间：暂无数据</span>
         </div>
       </div>
       <div class="today-market-list" id="today-market-list">
@@ -108,7 +107,7 @@
     <!-- ========== 交易决策：首页入口，不加入底部导航 ========== -->
     <section class="section trade-decision-section" aria-labelledby="trade-decision-title">
       <div class="trade-decision-entry" id="home-trade-decision-card">
-        <!-- 由 JS 读取 window.tradingDecision 后渲染；保留详情页入口。 -->
+        <!-- 由 JS 读取 window.tradingDecision 后渲染；保留交易决策路由。 -->
       </div>
     </section>
 

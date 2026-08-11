@@ -3880,6 +3880,15 @@ textarea:focus {
 
 /* 交易决策：首页仅追加入口，沿用现有浅色卡片语言。 */
 .trade-decision-section { margin-top: 2px; }
+.trade-decision-section,
+.trade-decision-entry,
+.trade-decision-list,
+.trade-decision-view,
+.trade-decision-view .view-main,
+.trade-decision-view .view-section { max-width: none; width: 100%; }
+.trade-decision-view { margin: 0; }
+.section-title-with-meta { align-items: baseline; display: flex; flex-wrap: wrap; gap: 8px; }
+.section-title-with-meta .section-meta { margin: 0; }
 .trade-decision-entry {
   align-items: center;
   background: linear-gradient(135deg, #F3FBF6, #FFFFFF);

@@ -103,19 +103,17 @@
 
   const normalizeTradingDecision = value => {
     const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
-    const analysis = source.marketAnalysis && typeof source.marketAnalysis === 'object' && !Array.isArray(source.marketAnalysis)
-      ? source.marketAnalysis
-      : null;
+    const section = (name, fields) => {
+      const input = source[name] && typeof source[name] === 'object' && !Array.isArray(source[name]) ? source[name] : {};
+      return Object.fromEntries(fields.map(field => [field, input[field] ?? null]));
+    };
     return {
-      ...source,
-      product: source.product ?? source.variety ?? source.品种 ?? analysis?.product ?? analysis?.variety ?? null,
-      marketAnalysis: analysis,
-      // 新版 marketAnalysis 映射到既有字段，旧版读取方与历史数据均可继续使用。
-      weeklyPosition: source.weeklyPosition ?? analysis?.mainPosition ?? null,
-      levels: source.levels ?? analysis?.technical ?? null,
-      operationPlan: source.operationPlan ?? analysis?.operation ?? null,
-      fundamentals: source.fundamentals ?? analysis?.fundamental ?? null,
-      trend: source.trend ?? analysis?.trend ?? null
+      symbol: source.symbol ?? null,
+      currentView: source.currentView ?? null,
+      mainPosition: section('mainPosition', ['priceChange', 'openInterestChange', 'volume', 'analysis', 'capitalSignal']),
+      fundamental: section('fundamental', ['supply', 'demand', 'inventory', 'policy']),
+      technical: section('technical', ['support', 'pressure']),
+      operation: section('operation', ['strategy', 'shortTerm', 'mediumTerm', 'risk'])
     };
   };
 
