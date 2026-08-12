@@ -168,8 +168,16 @@
   }
 
   function hasPositionData(row) {
-    return ['position', 'direction', 'side', 'quantity', 'volume', 'lots', 'cost', 'openPrice', 'floatingPnl', 'profit']
+    return ['position', 'direction', 'side', 'quantity', 'volume', 'lots', 'cost', 'openPrice', 'floatingProfitLoss', 'floatingPnl', 'profit', 'targetPrice', 'target', '目标价']
       .some(key => hasOwn(row, key));
+  }
+
+  // 外部 GPT 字段优先；字段出现即使值为 0 也不得回退到旧字段。
+  function firstPresent(row, keys) {
+    for (const key of keys) {
+      if (hasOwn(row, key)) return row[key];
+    }
+    return null;
   }
 
   function normalizePosition(row, updatedAt) {
@@ -180,8 +188,8 @@
       quantity: toNumber(row?.quantity ?? row?.volume ?? row?.lots ?? row?.手数) ?? 0,
       cost: toNumber(row?.cost ?? row?.openPrice ?? row?.成本),
       currentPrice: toNumber(row?.currentPrice ?? row?.current_price ?? row?.price ?? row?.latestPrice ?? row?.最新价),
-      floatingPnl: toNumber(row?.floatingPnl ?? row?.profit ?? row?.浮盈 ?? row?.浮动盈亏),
-      target: toNumber(row?.target ?? row?.目标价),
+      floatingPnl: toNumber(firstPresent(row, ['floatingProfitLoss', 'floatingPnl', 'profit', '浮盈', '浮动盈亏'])),
+      target: toNumber(firstPresent(row, ['targetPrice', 'target', '目标价'])),
       stopLoss: toNumber(row?.stopLoss ?? row?.stop ?? row?.止损),
       plan: String(row?.plan ?? row?.operationPlan ?? row?.操作计划 ?? '').trim(),
       note: String(row?.note ?? row?.备注 ?? '').trim(),

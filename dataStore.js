@@ -68,14 +68,22 @@
     source: item?.source ?? null
   }));
 
+  // GPT 外部字段优先；使用字段存在性，避免 0 被 falsy 回退吞掉。
+  const firstPresent = (item, keys) => {
+    for (const key of keys) {
+      if (Object.prototype.hasOwnProperty.call(item || {}, key)) return item[key];
+    }
+    return null;
+  };
+
   const normalizePositions = value => (Array.isArray(value) ? value : []).map(item => ({
     code: String(item?.code ?? '').trim(),
     direction: String(item?.direction ?? '').trim(),
     quantity: item?.quantity ?? 0,
     cost: item?.cost ?? null,
     currentPrice: item?.currentPrice ?? null,
-    floatingPnl: item?.floatingPnl ?? null,
-    target: item?.target ?? null,
+    floatingPnl: firstPresent(item, ['floatingProfitLoss', 'floatingPnl', 'profit', '浮盈', '浮动盈亏']),
+    target: firstPresent(item, ['targetPrice', 'target', '目标价']),
     stopLoss: item?.stopLoss ?? null,
     plan: String(item?.plan ?? '').trim(),
     note: String(item?.note ?? '').trim(),
