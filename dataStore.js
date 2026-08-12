@@ -268,6 +268,13 @@
     return { added, updated, total: current.length };
   };
 
+  /** GPT 持仓输入代表完整快照：允许用空数组明确清空，不与旧缓存合并。 */
+  const replacePositionsSnapshot = (incoming = []) => {
+    const next = normalizePositions(incoming);
+    applyModule('positions', next);
+    return { added: next.length, updated: 0, total: next.length, replaced: true };
+  };
+
   /** 按 date 覆盖当日日志，历史其他日期保留 */
   const upsertDailyLog = log => {
     const logs = normalizeDailyLogs(stored.dailyLogs || []);
@@ -317,6 +324,7 @@
     const updatedAt = payload?.updatedAt || new Date().toISOString();
     const quotes = Array.isArray(payload?.quotes) ? payload.quotes : [];
     const positions = Array.isArray(payload?.positions) ? payload.positions : [];
+    const positionsProvided = payload?.positionsProvided === true;
     const account = payload?.account && typeof payload.account === 'object' ? payload.account : null;
     const tradingDecision = payload?.tradingDecision && typeof payload.tradingDecision === 'object'
       ? payload.tradingDecision
@@ -324,7 +332,9 @@
     const domain = payload?.domain || 'futures';
 
     const quoteStats = quotes.length ? mergeQuotes(quotes) : { added: 0, updated: 0, total: (stored.futuresData || []).length };
-    const positionStats = positions.length ? mergePositions(positions) : { added: 0, updated: 0, total: (stored.positions || []).length };
+    const positionStats = positionsProvided
+      ? replacePositionsSnapshot(positions)
+      : { added: 0, updated: 0, total: (stored.positions || []).length };
     const accountResult = account
       ? mergeAccount({ ...account, updatedAt, source: 'gpt' }, { persist: false })
       : null;
@@ -359,7 +369,7 @@
     save();
     const modules = ['dailyLogs', 'meta'];
     if (quotes.length) modules.push('futuresData');
-    if (positions.length) modules.push('positions');
+    if (positionsProvided) modules.push('positions');
     if (accountResult) modules.push('accountData');
     if (tradingDecisionResult) modules.push('tradingDecision');
     emit({ modules, source: 'gpt' });

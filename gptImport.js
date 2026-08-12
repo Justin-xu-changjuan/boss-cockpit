@@ -63,6 +63,15 @@
     return text;
   }
 
+  const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
+
+  const firstDefined = (object, keys) => {
+    for (const key of keys) {
+      if (object?.[key] !== undefined) return object[key];
+    }
+    return null;
+  };
+
   function inferUnit(code, name) {
     const prefix = String(code || '').toUpperCase().match(/^[A-Z]+/)?.[0] || '';
     if (unitByPrefix[prefix]) return unitByPrefix[prefix];
@@ -131,26 +140,71 @@
     // 兼容旧 GPT 输入仅发生在导入边界；保存和渲染均只使用以下规范结构。
     const section = (value, fields) => {
       const input = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
-      return Object.fromEntries(fields.map(field => [field, input[field] ?? null]));
+      return Object.fromEntries(fields.map(([field, aliases]) => [field, firstDefined(input, [field, ...aliases]) ?? null]));
     };
     return {
       symbol: source.symbol ?? source.product ?? source.variety ?? source.品种 ?? legacyAnalysis.symbol ?? legacyAnalysis.product ?? legacyAnalysis.variety ?? null,
       currentView: source.currentView ?? source.trend ?? legacyAnalysis.currentView ?? legacyAnalysis.trend ?? null,
-      mainPosition: section(source.mainPosition ?? source.weeklyPosition ?? legacyAnalysis.mainPosition, ['priceChange', 'openInterestChange', 'volume', 'analysis', 'capitalSignal']),
-      fundamental: section(source.fundamental ?? source.fundamentals ?? legacyAnalysis.fundamental, ['supply', 'demand', 'inventory', 'policy']),
-      technical: section(source.technical ?? source.levels ?? legacyAnalysis.technical, ['support', 'pressure']),
-      operation: section(source.operation ?? source.operationPlan ?? legacyAnalysis.operation, ['strategy', 'shortTerm', 'mediumTerm', 'risk'])
+      mainPosition: section(source.mainPosition ?? source.weeklyPosition ?? source.mainFunds ?? legacyAnalysis.mainPosition, [
+        ['priceChange', ['price_change', '价格变动', '涨跌']],
+        ['openInterestChange', ['open_interest_change', '持仓量变动', '持仓变化']],
+        ['volume', ['成交量', '成交']],
+        ['analysis', ['分析', 'comment']],
+        ['capitalSignal', ['capital_signal', '资金信号', '资金流向']]
+      ]),
+      fundamental: section(source.fundamental ?? source.fundamentals ?? source.fundamentalAnalysis ?? legacyAnalysis.fundamental, [
+        ['supply', ['供应']], ['demand', ['需求']], ['inventory', ['库存']], ['policy', ['政策']]
+      ]),
+      technical: section(source.technical ?? source.levels ?? legacyAnalysis.technical, [
+        ['support', ['supportLevel', '支撑', '支撑位']], ['pressure', ['resistance', 'pressureLevel', '压力', '压力位']]
+      ]),
+      operation: section(source.operation ?? source.operationPlan ?? legacyAnalysis.operation, [
+        ['strategy', ['operationStrategy', 'plan', '策略', '操作策略']],
+        ['shortTerm', ['short_term', 'short', '短期', '短线']],
+        ['mediumTerm', ['medium_term', 'medium', '中期', '中线']],
+        ['risk', ['riskControl', '风险', '风控']]
+      ])
+    };
+  }
+
+  function hasPositionData(row) {
+    return ['position', 'direction', 'side', 'quantity', 'volume', 'lots', 'cost', 'openPrice', 'floatingPnl', 'profit']
+      .some(key => hasOwn(row, key));
+  }
+
+  function normalizePosition(row, updatedAt) {
+    const code = String(row?.contract ?? row?.code ?? row?.symbol ?? '').trim().toUpperCase();
+    return {
+      code,
+      direction: normalizeDirection(row?.direction ?? row?.position ?? row?.side ?? ''),
+      quantity: toNumber(row?.quantity ?? row?.volume ?? row?.lots ?? row?.手数) ?? 0,
+      cost: toNumber(row?.cost ?? row?.openPrice ?? row?.成本),
+      currentPrice: toNumber(row?.currentPrice ?? row?.current_price ?? row?.price ?? row?.latestPrice ?? row?.最新价),
+      floatingPnl: toNumber(row?.floatingPnl ?? row?.profit ?? row?.浮盈 ?? row?.浮动盈亏),
+      target: toNumber(row?.target ?? row?.目标价),
+      stopLoss: toNumber(row?.stopLoss ?? row?.stop ?? row?.止损),
+      plan: String(row?.plan ?? row?.operationPlan ?? row?.操作计划 ?? '').trim(),
+      note: String(row?.note ?? row?.备注 ?? '').trim(),
+      updatedAt,
+      source: 'gpt'
     };
   }
 
   /** 期货域：GPT futures[] + 可选 account → 行情 + 持仓 + 账户 + 当日日志 */
   function handleFuturesDomain(payload, meta) {
     const list = Array.isArray(payload.futures) ? payload.futures : [];
+    if (hasOwn(payload, 'positions') && !Array.isArray(payload.positions)) {
+      throw new Error('positions 必须是数组；传空数组 [] 可清空当前持仓。');
+    }
     const account = extractAccount(payload);
     const tradingDecision = extractTradingDecision(payload);
+    const positionsProvided = hasOwn(payload, 'positions') || list.some(hasPositionData);
+    const positionRows = hasOwn(payload, 'positions')
+      ? payload.positions
+      : list.filter(hasPositionData);
 
-    if (!list.length && !account && !tradingDecision) {
-      throw new Error('未找到 futures、account 或 tradingDecision 数据。');
+    if (!list.length && !positionsProvided && !account && !tradingDecision) {
+      throw new Error('未找到 futures、positions、account 或 tradingDecision 数据。');
     }
 
     const suppliedUpdatedAt = payload.updatedAt ?? payload.timestamp ?? payload.更新时间;
@@ -186,32 +240,18 @@
         source: 'gpt'
       });
 
-      const direction = normalizeDirection(row?.position || row?.direction || '');
-      const quantity = toNumber(row?.volume ?? row?.quantity);
-      const cost = toNumber(row?.cost);
-      const profit = toNumber(row?.profit ?? row?.floatingPnl);
-
-      // 有方向或数量或成本时，尝试写入/更新持仓
-      const hasPositionSignal = Boolean(direction) || quantity !== null || cost !== null;
-      if (hasPositionSignal) {
-        positionUpdates.push({
-          code,
-          direction: direction || '',
-          quantity: quantity ?? 0,
-          cost,
-          currentPrice: price,
-          floatingPnl: profit,
-          target: toNumber(row?.target),
-          stopLoss: toNumber(row?.stopLoss ?? row?.stop),
-          plan: plan || note,
-          note,
-          updatedAt: nowISO,
-          source: 'gpt'
-        });
-      }
     });
 
-    if (!quoteUpdates.length && !account && !tradingDecision) throw new Error('没有可识别的数据。');
+    positionRows.forEach((row, index) => {
+      const position = normalizePosition(row, nowISO);
+      if (!position.code) {
+        skipped.push(`持仓第 ${index + 1} 条缺少 contract/code`);
+        return;
+      }
+      positionUpdates.push(position);
+    });
+
+    if (!quoteUpdates.length && !positionsProvided && !account && !tradingDecision) throw new Error('没有可识别的数据。');
 
     const result = window.BossData.applyGPTImport({
       domain: 'futures',
@@ -219,6 +259,7 @@
       updatedAt: nowISO,
       quotes: quoteUpdates,
       positions: positionUpdates,
+      positionsProvided,
       account,
       tradingDecision,
       rawCount: list.length
@@ -228,8 +269,8 @@
     if (quoteUpdates.length) {
       parts.push(`${result.quotes.updated + result.quotes.added} 个行情`);
     }
-    if (positionUpdates.length) {
-      parts.push(`${result.positions.updated + result.positions.added} 条持仓`);
+    if (positionsProvided) {
+      parts.push(`${result.positions.total} 条持仓`);
     }
     if (result.account) {
       parts.push('账户');
@@ -281,7 +322,7 @@
     if (domainHint && DOMAIN_HANDLERS[domainHint]) {
       return DOMAIN_HANDLERS[domainHint](payload, { date: payload.date });
     }
-    if (Array.isArray(payload.futures) || payload.account || extractTradingDecision(payload)) {
+    if (Array.isArray(payload.futures) || Array.isArray(payload.positions) || payload.account || extractTradingDecision(payload)) {
       return DOMAIN_HANDLERS.futures(payload, { date: payload.date });
     }
     // 顶层直接给 equity/margin 也视为账户更新
@@ -303,7 +344,7 @@
     if (payload.finance) return DOMAIN_HANDLERS.finance(payload, {});
     if (payload.journal || payload.logs) return DOMAIN_HANDLERS.journal(payload, {});
 
-    throw new Error('未识别的数据格式。可用 { "date","account","futures":[...] }。');
+    throw new Error('未识别的数据格式。可用 { "date","account","positions":[],"futures":[...] }。');
   }
 
   function registerDomain(name, handler) {

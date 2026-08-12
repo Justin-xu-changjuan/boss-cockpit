@@ -318,7 +318,7 @@
       const direction = pos.direction || '—';
       const qty = Number(pos.quantity);
       const qtyText = Number.isFinite(qty) && qty ? `${qty} 手` : '—';
-      const price = quote.price ?? pos.currentPrice;
+      const price = pos.currentPrice ?? quote.price;
       return `
         <article class="today-market-card" data-position-preview>
           <header class="today-market-head">
